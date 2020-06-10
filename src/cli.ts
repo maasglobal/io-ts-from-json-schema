@@ -124,6 +124,7 @@ const supportedEverywhere = [
   'definitions',
   'type',
   'properties',
+  'propertyNames',
   'patternProperties',
   'required',
   'additionalProperties',
@@ -261,6 +262,13 @@ function parseRef(ref: string) {
   return { filePath, variableName };
 }
 
+function fromPropertyNames(schema: JSONSchema7): [gen.TypeReference] | [] {
+  if ('propertyNames' in schema && typeof schema.propertyNames !== 'undefined') {
+    return [gen.recordCombinator(fromSchema(schema.propertyNames), gen.unknownType)];
+  }
+  return [];
+}
+
 function fromPatternProperties(schema: JSONSchema7): [gen.TypeReference] | [] {
   if ('patternProperties' in schema && typeof schema.patternProperties !== 'undefined') {
     // the mapping from pattern to item is lost in the process
@@ -305,7 +313,11 @@ function fromProperties(schema: JSONSchema7): [gen.TypeReference] | [] {
 }
 
 function toInterfaceCombinator(schema: JSONSchema7): gen.TypeReference {
-  const combinators = [...fromProperties(schema), ...fromPatternProperties(schema)];
+  const combinators = [
+    ...fromProperties(schema),
+    ...fromPropertyNames(schema),
+    ...fromPatternProperties(schema),
+  ];
   const combinator = (() => {
     if (combinators.length > 1) {
       return gen.intersectionCombinator(combinators);
