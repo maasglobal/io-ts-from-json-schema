@@ -462,7 +462,15 @@ function calculateImportName(filePath: string) {
 }
 
 function fromRef(refString: string): gen.TypeReference {
-  const ref = parseRef(refString);
+  // eslint-disable-next-line
+  let ref;
+  try {
+    // eslint-disable-next-line
+    ref = parseRef(refString);
+  } catch {
+    return error('Failed to parse reference');
+  }
+
   if (ref.filePath === '') {
     return gen.customCombinator(ref.variableName, ref.variableName, [ref.variableName]);
   }
