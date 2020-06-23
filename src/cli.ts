@@ -2,6 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import * as gen from 'io-ts-codegen';
 import { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 import * as yargs from 'yargs';
@@ -14,6 +15,16 @@ const { argv } = yargs
   .option('strict', { type: 'boolean' })
   .option('base', { type: 'string', default: '' })
   .option('import', { type: 'string', array: true, default: [] })
+  .option('importHashAlgorithm', {
+    type: 'string',
+    default: 'sha256',
+    choices: crypto.getHashes(),
+    hidden: true,
+  })
+  .option('importHashLength', {
+    type: 'number',
+    default: 0,
+  })
   .help();
 
 type URI = string;
@@ -454,11 +465,30 @@ function calculateImportPath(filePath: string) {
   return withoutSuffix;
 }
 
-function calculateImportName(filePath: string) {
+function importBaseName(filePath: string): string {
   // eslint-disable-next-line
   const [withoutPath] = filePath.split("/").reverse();
   const [basefile] = withoutPath.split('.json');
-  return `${typenameFromKebab(basefile)}_`;
+  const typeName = typenameFromKebab(basefile);
+  return typeName.concat('_');
+}
+
+function importHashName(str: string): string {
+  if (argv.importHashLength === 0) {
+    return '';
+  }
+  const fullDigest = crypto
+    .createHash(argv.importHashAlgorithm)
+    .update(str)
+    .digest('hex');
+  const shortDigest = fullDigest.slice(0, argv.importHashLength);
+  return shortDigest.concat('_');
+}
+
+function calculateImportName(filePath: string, refString: string) {
+  const baseName = importBaseName(filePath);
+  const hashName = importHashName(refString);
+  return baseName.concat(hashName);
 }
 
 function fromRef(refString: string): gen.TypeReference {
@@ -474,7 +504,7 @@ function fromRef(refString: string): gen.TypeReference {
   if (ref.filePath === '') {
     return gen.customCombinator(ref.variableName, ref.variableName, [ref.variableName]);
   }
-  const importName = calculateImportName(ref.filePath);
+  const importName = calculateImportName(ref.filePath, refString);
   const importPath = calculateImportPath(ref.filePath);
   imps.add(`import * as ${importName} from '${importPath}';`);
   const variableRef = `${importName}.${ref.variableName}`;
