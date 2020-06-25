@@ -473,13 +473,14 @@ function importBaseName(filePath: string): string {
   return typeName.concat('_');
 }
 
-function importHashName(str: string): string {
+function importHashName(refString: string): string {
   if (argv.importHashLength === 0) {
     return '';
   }
+  const [withoutFragment] = refString.split('#');
   const fullDigest = crypto
     .createHash(argv.importHashAlgorithm)
-    .update(str)
+    .update(withoutFragment)
     .digest('hex');
   const shortDigest = fullDigest.slice(0, argv.importHashLength);
   return shortDigest.concat('_');
