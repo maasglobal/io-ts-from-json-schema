@@ -895,7 +895,13 @@ function fromRoot(root: JSONSchema7): Array<DefInput> {
 }
 
 function fromFile(schema: JSONSchema7): Array<DefInput> {
-  return fromDefinitions(schema.definitions).concat(fromRoot(schema));
+  const namedDefs = fromDefinitions(schema.definitions);
+  if (namedDefs.map(({ dec: { name } }) => name).includes(defaultExport)) {
+    warning('Naming clash, ignoring default export');
+    return namedDefs;
+  }
+  const rootDef = fromRoot(schema);
+  return namedDefs.concat(rootDef);
 }
 
 type Def = {
@@ -947,7 +953,12 @@ function constructDefs(defInputs: Array<DefInput>): Array<Def> {
   });
 }
 
-const defs: Array<Def> = constructDefs(fromFile(inputSchema as JSONSchema7));
+const inputs: Array<DefInput> = fromFile(inputSchema as JSONSchema7);
+const defs: Array<Def> = constructDefs(inputs);
+
+if (defs.length !== inputs.length) {
+  error('Unable to process schema because of duplicate naming');
+}
 
 if (returnCode === ErrorCode.ERROR) {
   process.exit(returnCode);
