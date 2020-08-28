@@ -771,8 +771,8 @@ function extractDefaultValue(schema: JSONSchema7Definition): JSONSchema7['defaul
 
 function fromDefinitions(definitions2: JSONSchema7['definitions']): Array<DefInput> {
   const definitions = definitions2 ?? {};
-  return Object.entries(definitions).map(
-    ([k, v]: [string, JSONSchema7Definition]): DefInput => {
+  return Object.entries(definitions).flatMap(
+    ([k, v]: [string, JSONSchema7Definition]): Array<DefInput> => {
       const scem = v;
       const name = capitalize(k);
       const examples = extractExamples(scem);
@@ -781,19 +781,21 @@ function fromDefinitions(definitions2: JSONSchema7['definitions']): Array<DefInp
       if (typeof scem === 'boolean') {
         const title = undefined;
         const description = undefined;
-        return {
-          meta: {
-            title,
-            description,
-            examples,
-            defaultValue,
+        return [
+          {
+            meta: {
+              title,
+              description,
+              examples,
+              defaultValue,
+            },
+            dec: gen.typeDeclaration(
+              name,
+              error(`Any and never types are not supported by convert.ts`),
+              true,
+            ),
           },
-          dec: gen.typeDeclaration(
-            name,
-            error(`Any and never types are not supported by convert.ts`),
-            true,
-          ),
-        };
+        ];
       }
       if ('$ref' in scem) {
         // ref's do not have meta data
@@ -803,33 +805,47 @@ function fromDefinitions(definitions2: JSONSchema7['definitions']): Array<DefInp
           // eslint-disable-next-line
           throw new Error("broken input");
         }
-        return {
+        return [
+          {
+            meta: {
+              title,
+              description,
+              examples,
+              defaultValue,
+            },
+            dec: gen.typeDeclaration(name, fromRef(scem['$ref']), true),
+          },
+        ];
+      }
+      const candidateName = name.concat('Candidate');
+      return [
+        {
           meta: {
-            title,
-            description,
+            title: candidateName,
+            description: `${name} approximation without runtime validation`,
+            examples: [],
+            defaultValue: undefined,
+          },
+          dec: gen.typeDeclaration(candidateName, fromSchema(scem, true), true),
+        },
+        {
+          meta: {
+            title: scem.title,
+            description: scem.description,
             examples,
             defaultValue,
           },
-          dec: gen.typeDeclaration(name, fromRef(scem['$ref']), true),
-        };
-      }
-      return {
-        meta: {
-          title: scem.title,
-          description: scem.description,
-          examples,
-          defaultValue,
-        },
-        dec: gen.typeDeclaration(
-          name,
-          gen.brandCombinator(
-            fromSchema(scem, true),
-            (x) => generateChecks(x, scem),
+          dec: gen.typeDeclaration(
             name,
+            gen.brandCombinator(
+              gen.identifier(candidateName),
+              (x) => generateChecks(x, scem),
+              name,
+            ),
+            true,
           ),
-          true,
-        ),
-      };
+        },
+      ];
     },
   );
 }
@@ -840,7 +856,17 @@ function fromNonRefRoot(schema: JSONSchema7): Array<DefInput> {
   const description = 'The default export. More information at the top.';
   const examples = extractExamples(schema);
   const defaultValue = extractDefaultValue(schema);
+  const candidateName = defaultExport.concat('Candidate');
   return [
+    {
+      meta: {
+        title: candidateName,
+        description: `${defaultExport} approximation without runtime validation`,
+        examples: [],
+        defaultValue: undefined,
+      },
+      dec: gen.typeDeclaration(candidateName, fromSchema(schema, true), true),
+    },
     {
       meta: {
         title,
@@ -851,7 +877,7 @@ function fromNonRefRoot(schema: JSONSchema7): Array<DefInput> {
       dec: gen.typeDeclaration(
         defaultExport,
         gen.brandCombinator(
-          fromSchema(schema, true),
+          gen.identifier(candidateName),
           (x) => generateChecks(x, schema),
           defaultExport,
         ),
