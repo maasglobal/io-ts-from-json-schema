@@ -800,10 +800,10 @@ inquirer@^7.0.0:
     strip-ansi "^6.0.0"
     through "^2.3.6"
 
-io-ts-codegen@^0.4.4:
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/io-ts-codegen/-/io-ts-codegen-0.4.4.tgz#3233c034a9cbfbf49da3ea66880f1e37cd4b0406"
-  integrity sha512-Ym0A86SQK5q+VssulIu/TsFFIL4vFrfDjiCNqQM7OvBpmf8XLkzcvKtTIoMkR7sue9msng166Ra4u1ZdCawzmA==
+io-ts-codegen@^0.4.5:
+  version "0.4.5"
+  resolved "https://registry.yarnpkg.com/io-ts-codegen/-/io-ts-codegen-0.4.5.tgz#67a5e0e0d72751451ab6c2c70e2f304408f398de"
+  integrity sha512-7Q6CbNyYOIelPt2OddqMIk5jGfUM5Z+Y2OSsPAJnaSRroCwedAp0cFNh5h02nsE/33P9xjyGhKTajMkPApEdcA==
 
 is-arrayish@^0.2.1:
   version "0.2.1"

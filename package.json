@@ -19,7 +19,7 @@
     "deploy-npm": "yarn ci && yarn publish"
   },
   "dependencies": {
-    "io-ts-codegen": "^0.4.4",
+    "io-ts-codegen": "^0.4.5",
     "yargs": "^15.3.1"
   },
   "devDependencies": {
