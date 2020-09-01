@@ -956,10 +956,6 @@ function constructDefs(defInputs: Array<DefInput>): Array<Def> {
 const inputs: Array<DefInput> = fromFile(inputSchema as JSONSchema7);
 const defs: Array<Def> = constructDefs(inputs);
 
-if (defs.length !== inputs.length) {
-  error('Unable to process schema because of duplicate naming');
-}
-
 if (returnCode === ErrorCode.ERROR) {
   process.exit(returnCode);
 }
