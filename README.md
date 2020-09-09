@@ -48,7 +48,7 @@ mkdir -p ./schemas/examples && echo '{
 
 # Generate TypeScript Code
 npm install --dev io-ts-from-json-schema typescript
-./node_modules/.bin/iotsfjs --inputFile schemas/examples/user.json --outputDir src --base http://example.com/iotsfjs/ --import http://maasglobal.com/^maas-schemas-ts/lib/
+./node_modules/.bin/iotsfjs --inputFile 'schemas/**/*.json' --outputDir src --base http://example.com/iotsfjs/ --import http://maasglobal.com/^maas-schemas-ts/lib/
 
 # Generate Tests
 npm install --dev jest @types/jest doctest-ts ts-jest io-ts-validator maas-schemas-ts fp-ts io-ts io-ts-types
