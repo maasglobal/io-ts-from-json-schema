@@ -12,7 +12,7 @@
   "scripts": {
     "clean": "rm -rf lib",
     "typecheck": "tsc -p src/tsconfig.json",
-    "build": "yarn clean && tsc",
+    "build": "yarn clean && tsc && chmod u+x ./lib/cli.js",
     "eslint": "eslint --max-warnings=0 '**/*.{ts,js,json}'",
     "lint": "yarn eslint",
     "ci": "yarn lint && yarn typecheck && yarn build",
