@@ -2,6 +2,7 @@
 
 import * as path from 'path';
 import * as crypto from 'crypto';
+import * as stream from 'stream';
 import * as gen from 'io-ts-codegen';
 import { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 
@@ -20,6 +21,7 @@ export type Args = {
 export function* iotsfjs(
   inputSchema: JSONSchema7,
   args: Args,
+  stderr: stream.Writable,
 ): Generator<string, void, undefined> {
   type URI = string;
   type Location = string;
@@ -192,7 +194,7 @@ let returnCode: ReturnCode = OK;
   function reportError(level: 'INFO' | 'WARNING' | 'ERROR', message: string) {
     const lines = [`${level}: ${message}`, `  in ${args.inputFile}`];
     // eslint-disable-next-line
-  console.error(lines.join("\n"));
+    stderr.write(lines.join('\n').concat('\n'));
   }
 
   function error(message: string) {
