@@ -37,8 +37,11 @@
     "eslint-plugin-json": "^2.1.1",
     "eslint-plugin-prettier": "^3.1.3",
     "fp-ts": "^2.6.1",
+    "jest": "^26.4.2",
+    "maas-schemas-git-develop": "git://github.com/maasglobal/maas-schemas.git#develop",
     "monocle-ts": "^2.1.0",
     "prettier": "^2.0.5",
+    "ts-jest": "^26.3.0",
     "typescript": "^3.9.2"
   },
   "repository": {
