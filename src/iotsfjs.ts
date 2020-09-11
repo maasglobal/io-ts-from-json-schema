@@ -803,17 +803,7 @@ let returnCode: ReturnCode = OK;
             },
           ];
         }
-        const candidateName = name.concat('Candidate');
         return [
-          {
-            meta: {
-              title: candidateName,
-              description: `${name} approximation without runtime validation`,
-              examples: [],
-              defaultValue: undefined,
-            },
-            dec: gen.typeDeclaration(candidateName, fromSchema(scem, true), true),
-          },
           {
             meta: {
               title: scem.title,
@@ -824,7 +814,7 @@ let returnCode: ReturnCode = OK;
             dec: gen.typeDeclaration(
               name,
               gen.brandCombinator(
-                gen.identifier(candidateName),
+                fromSchema(scem, true),
                 (x) => generateChecks(x, scem),
                 name,
               ),
@@ -842,17 +832,7 @@ let returnCode: ReturnCode = OK;
     const description = 'The default export. More information at the top.';
     const examples = extractExamples(schema);
     const defaultValue = extractDefaultValue(schema);
-    const candidateName = defaultExport.concat('Candidate');
     return [
-      {
-        meta: {
-          title: candidateName,
-          description: `${defaultExport} approximation without runtime validation`,
-          examples: [],
-          defaultValue: undefined,
-        },
-        dec: gen.typeDeclaration(candidateName, fromSchema(schema, true), true),
-      },
       {
         meta: {
           title,
@@ -863,7 +843,7 @@ let returnCode: ReturnCode = OK;
         dec: gen.typeDeclaration(
           defaultExport,
           gen.brandCombinator(
-            gen.identifier(candidateName),
+            fromSchema(schema, true),
             (x) => generateChecks(x, schema),
             defaultExport,
           ),
