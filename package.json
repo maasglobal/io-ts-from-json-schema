@@ -10,12 +10,13 @@
     "iotsfjs": "lib/cli.js"
   },
   "scripts": {
-    "clean": "rm -rf lib",
+    "test": "jest --no-cache",
+    "clean": "rm -rf lib tmp",
     "typecheck": "tsc -p src/tsconfig.json",
     "build": "yarn clean && tsc && chmod u+x ./lib/cli.js",
     "eslint": "eslint --max-warnings=0 '**/*.{ts,js,json}'",
     "lint": "yarn eslint",
-    "ci": "yarn lint && yarn typecheck && yarn build",
+    "ci": "yarn lint && yarn typecheck && yarn test && yarn build",
     "deploy-npm": "yarn ci && yarn publish"
   },
   "dependencies": {

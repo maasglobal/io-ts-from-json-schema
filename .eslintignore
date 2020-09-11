@@ -1,3 +1,4 @@
 node_modules
+tmp
 lib
 tsconfig.eslint.json

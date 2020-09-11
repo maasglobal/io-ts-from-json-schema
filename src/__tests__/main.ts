@@ -1,7 +1,7 @@
-import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Writable } from 'stream';
+import { execSync } from 'child_process';
 import { glob } from 'glob';
 import * as ts from 'typescript';
 
@@ -9,9 +9,12 @@ import { main } from '../main';
 
 describe('main', () => {
   it('should convert maas-schemas', () => {
-    const tmpDir = fs.mkdtempSync(os.tmpdir().concat('-iotsfjs-jest-'));
+    const tmpRoot = 'tmp';
+    fs.mkdirSync(tmpRoot, { recursive: true });
+    const tmpDir = fs.mkdtempSync(path.join(tmpRoot, 'test-run-'));
     const tsDir = path.join(tmpDir, 'src');
     const jsDir = path.join(tmpDir, 'lib');
+    const packageFile = path.join(tmpDir, 'package.json');
 
     const stderr = new Writable({
       write: (buffer, _encoding, cb) => {
@@ -35,10 +38,24 @@ describe('main', () => {
         ' ',
       ),
     });
+    const fakePackage = {
+      name: 'x',
+      description: 'x',
+      version: '0.0.1',
+      license: 'UNLICENSED',
+      repository: {},
+    };
+    execSync(`echo '${JSON.stringify(fakePackage)}' > ${packageFile}`);
+    execSync(`npm install --no-save io-ts fp-ts`, {
+      cwd: tmpDir,
+    });
     const tsFiles = glob.sync(path.join(tsDir, '**', '*.ts'));
     const program = ts.createProgram(tsFiles, {
       target: ts.ScriptTarget.ES5,
       module: ts.ModuleKind.CommonJS,
+      moduleResolution: ts.ModuleResolutionKind.NodeJs,
+      lib: ['esnext', 'dom'],
+      typeRoots: ['./node_modules/@types'],
       skipLibCheck: true,
       esModuleInterop: true,
       allowSyntheticDefaultImports: true,
