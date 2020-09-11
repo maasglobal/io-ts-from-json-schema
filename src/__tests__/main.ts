@@ -1,4 +1,3 @@
-import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Writable } from 'stream';
@@ -10,7 +9,9 @@ import { main } from '../main';
 
 describe('main', () => {
   it('should convert maas-schemas', () => {
-    const tmpDir = fs.mkdtempSync(os.tmpdir().concat('-iotsfjs-jest-'));
+    const tmpRoot = 'tmp';
+    fs.mkdirSync(tmpRoot, { recursive: true });
+    const tmpDir = fs.mkdtempSync(path.join(tmpRoot, 'test-run-'));
     const tsDir = path.join(tmpDir, 'src');
     const jsDir = path.join(tmpDir, 'lib');
     const packageFile = path.join(tmpDir, 'package.json');

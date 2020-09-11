@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "jest --no-cache",
-    "clean": "rm -rf lib",
+    "clean": "rm -rf lib tmp",
     "typecheck": "tsc -p src/tsconfig.json",
     "build": "yarn clean && tsc && chmod u+x ./lib/cli.js",
     "eslint": "eslint --max-warnings=0 '**/*.{ts,js,json}'",
