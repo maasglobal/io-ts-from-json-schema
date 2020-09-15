@@ -65,8 +65,8 @@ describe('main', () => {
       baseUrl: '.',
       outDir: jsDir,
     });
-    const diagnostics = ts.getPreEmitDiagnostics(program)
-    const errors = Array.from(new Set(diagnostics.map(({messageText}) => messageText)));
+    const diagnostics = ts.getPreEmitDiagnostics(program);
+    const errors = Array.from(new Set(diagnostics.map(({ messageText }) => messageText)));
     expect(errors).toStrictEqual([]);
     program.emit();
   });
