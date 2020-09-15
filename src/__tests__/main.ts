@@ -46,7 +46,7 @@ describe('main', () => {
       repository: {},
     };
     execSync(`echo '${JSON.stringify(fakePackage)}' > ${packageFile}`);
-    execSync(`npm install --no-save io-ts fp-ts`, {
+    execSync(`npm install --no-save io-ts io-ts-types fp-ts monocle-ts newtype-ts`, {
       cwd: tmpDir,
     });
     const tsFiles = glob.sync(path.join(tsDir, '**', '*.ts'));
@@ -54,7 +54,6 @@ describe('main', () => {
       target: ts.ScriptTarget.ES5,
       module: ts.ModuleKind.CommonJS,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
-      lib: ['esnext', 'dom'],
       typeRoots: ['./node_modules/@types'],
       skipLibCheck: true,
       esModuleInterop: true,
@@ -66,6 +65,9 @@ describe('main', () => {
       baseUrl: '.',
       outDir: jsDir,
     });
+    const diagnostics = ts.getPreEmitDiagnostics(program);
+    const errors = Array.from(new Set(diagnostics.map(({ messageText }) => messageText)));
+    expect(errors).toStrictEqual([]);
     program.emit();
   });
 });
