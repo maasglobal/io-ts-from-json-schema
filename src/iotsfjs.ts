@@ -5,6 +5,7 @@ import * as crypto from 'crypto';
 import * as stream from 'stream';
 import * as gen from 'io-ts-codegen';
 import { JSONSchema7, JSONSchema7Definition } from 'json-schema';
+import { printC } from './codegen/printc';
 
 export type Args = {
   import: Array<string>;
@@ -479,7 +480,7 @@ let returnCode: ReturnCode = OK;
     return baseName.concat(hashName);
   }
 
-  function fromRef(refString: string): gen.TypeReference {
+  function fromRef(refString: string, name?: string): gen.TypeReference {
     // eslint-disable-next-line
   let ref;
     try {
@@ -490,11 +491,17 @@ let returnCode: ReturnCode = OK;
     }
 
     if (ref.filePath === '') {
+      if (name) {
+        exps.add(`export type ${name}C = ${ref.variableName}C;`);
+      }
       return gen.customCombinator(ref.variableName, ref.variableName, [ref.variableName]);
     }
     const importName = calculateImportName(ref.filePath, refString);
     const importPath = calculateImportPath(ref.filePath);
     imps.add(`import * as ${importName} from '${importPath}';`);
+    if (name) {
+      exps.add(`export type ${name}C = ${importName}.${ref.variableName}C;`);
+    }
     const variableRef = `${importName}.${ref.variableName}`;
     return gen.customCombinator(variableRef, variableRef, [importName]);
   }
@@ -799,7 +806,7 @@ let returnCode: ReturnCode = OK;
                 examples,
                 defaultValue,
               },
-              dec: gen.typeDeclaration(name, fromRef(scem['$ref']), true),
+              dec: gen.typeDeclaration(name, fromRef(scem['$ref'], name), true),
             },
           ];
         }
@@ -874,7 +881,11 @@ let returnCode: ReturnCode = OK;
             examples,
             defaultValue,
           },
-          dec: gen.typeDeclaration(defaultExport, fromRef(root['$ref']), true),
+          dec: gen.typeDeclaration(
+            defaultExport,
+            fromRef(root['$ref'], defaultExport),
+            true,
+          ),
         },
       ];
     }
@@ -922,8 +933,10 @@ let returnCode: ReturnCode = OK;
       const examples = meta.examples || [];
       const defaultValue = meta.defaultValue;
       const staticType = gen.printStatic(dec);
-      const runtimeType = gen
-        .printRuntime(dec)
+      const runtimeType = printC(dec)
+        .concat('\n')
+        .concat(gen.printRuntime(dec))
+        .replace(`const ${typeName} `, `const ${typeName}: ${typeName}C `)
         .replace(/\ninterface /, '\nexport interface ');
 
       if (typeof meta.description !== 'string') {
