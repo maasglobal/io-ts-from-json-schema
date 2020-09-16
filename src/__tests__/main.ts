@@ -69,5 +69,17 @@ describe('main', () => {
     const errors = Array.from(new Set(diagnostics.map(({ messageText }) => messageText)));
     expect(errors).toStrictEqual([]);
     program.emit();
+    const tsSize = parseInt(
+      execSync(`du -s ${tsDir} | cut -f1`, { encoding: 'ascii' }),
+      10,
+    );
+    const jsSize = parseInt(
+      execSync(`du -s ${jsDir} | cut -f1`, { encoding: 'ascii' }),
+      10,
+    );
+    const ratio = jsSize / tsSize;
+    const multiplier = 4;
+    // detect exponential lib growth
+    expect(ratio).toBeLessThan(multiplier);
   });
 });
