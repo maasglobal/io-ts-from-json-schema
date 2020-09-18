@@ -66,8 +66,8 @@ export function* iotsfjs(
     if (isRegexpObject(regexp)) {
       return regexp;
     }
-    // eslint-disable-next-line
-  throw new Error("unknown regexp format");
+    // eslint-disable-next-line fp/no-throw
+    throw new Error('unknown regexp format');
   }
 
   // END: Ajv Schema Helpers
@@ -162,10 +162,8 @@ export const Defined: DefinedC = new DefinedType()
   ];
 
   const documentBase = (() => {
-    // eslint-disable-next-line
-  const [, ...reversePath] = args.documentURI.split('/').reverse();
-    // eslint-disable-next-line
-  return reversePath.reverse().join('/');
+    const [, ...reversePath] = args.documentURI.split('/').reverse();
+    return reversePath.reverse().join('/');
   })();
 
   const defaultExport = getDefaultExport(args.inputFile);
@@ -181,20 +179,19 @@ export const Defined: DefinedC = new DefinedType()
   type OK = 0;
   const OK: OK = 0;
   type ReturnCode = OK | ErrorCode;
-  // eslint-disable-next-line
-let returnCode: ReturnCode = OK;
+  // eslint-disable-next-line fp/no-let
+  let returnCode: ReturnCode = OK;
 
   function updateFailure(level: ErrorCode) {
     if (returnCode === ErrorCode.ERROR) {
       return;
     }
-    // eslint-disable-next-line
-  returnCode = level;
+    // eslint-disable-next-line fp/no-mutation
+    returnCode = level;
   }
 
   function reportError(level: 'INFO' | 'WARNING' | 'ERROR', message: string) {
     const lines = [`${level}: ${message}`, `  in ${args.inputFile}`];
-    // eslint-disable-next-line
     stderr.write(lines.join('\n').concat('\n'));
   }
 
@@ -233,24 +230,23 @@ let returnCode: ReturnCode = OK;
       return { filePath, variableName: getDefaultExport(filePath) };
     }
     if (parts.length > 2) {
-      // eslint-disable-next-line
-    throw new Error("unknown ref format");
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('unknown ref format');
     }
     const [filePath, jsonPath] = parts;
-    // eslint-disable-next-line
-  const jsonPathParts = jsonPath.split("/");
+    const jsonPathParts = jsonPath.split('/');
     if (jsonPathParts.length !== 3) {
-      // eslint-disable-next-line
-    throw new Error("unknown ref format");
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('unknown ref format');
     }
     const [empty, definitions, name] = jsonPathParts;
     if (empty !== '') {
-      // eslint-disable-next-line
-    throw new Error("unknown ref format");
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('unknown ref format');
     }
     if (definitions !== 'definitions') {
-      // eslint-disable-next-line
-    throw new Error("unknown ref format");
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('unknown ref format');
     }
     const variableName = typenameFromKebab(name);
     return { filePath, variableName };
@@ -354,8 +350,8 @@ let returnCode: ReturnCode = OK;
           const combinators = schema.items.map((s) => fromSchema(s));
           return gen.tupleCombinator(combinators);
         }
-        // eslint-disable-next-line
-      throw new Error(
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(
           'tuples with ...rest are not supported, set additionalItems false',
         );
       }
@@ -444,8 +440,8 @@ let returnCode: ReturnCode = OK;
       }
       return './'.concat(relativePath);
     }
-    // eslint-disable-next-line
-  for (const [uri, location] of imports) {
+    // eslint-disable-next-line fp/no-loops
+    for (const [uri, location] of imports) {
       if (withoutSuffix.startsWith(uri)) {
         return location.concat(withoutSuffix.slice(uri.length));
       }
@@ -454,8 +450,7 @@ let returnCode: ReturnCode = OK;
   }
 
   function importBaseName(filePath: string): string {
-    // eslint-disable-next-line
-  const [withoutPath] = filePath.split("/").reverse();
+    const [withoutPath] = filePath.split('/').reverse();
     const [basefile] = withoutPath.split('.json');
     const typeName = typenameFromKebab(basefile);
     return typeName.concat('_');
@@ -499,11 +494,11 @@ let returnCode: ReturnCode = OK;
       warning(`unexpected key in a $ref object`);
     }
 
-    // eslint-disable-next-line
-  let ref;
+    // eslint-disable-next-line fp/no-let
+    let ref;
     try {
-      // eslint-disable-next-line
-    ref = parseRef(refString);
+      // eslint-disable-next-line fp/no-mutation
+      ref = parseRef(refString);
     } catch {
       return error('Failed to parse reference');
     }
@@ -534,8 +529,7 @@ let returnCode: ReturnCode = OK;
   function fromType(schema: JSONSchema7): [gen.TypeReference] | [] {
     if (Array.isArray(schema.type)) {
       const combinators = schema.type.map((t) => {
-        // eslint-disable-next-line
-      switch (t) {
+        switch (t) {
           case 'string':
             return gen.stringType;
           case 'number':
@@ -546,8 +540,8 @@ let returnCode: ReturnCode = OK;
           case 'null':
             return gen.nullType;
         }
-        // eslint-disable-next-line
-      throw new Error(`${t}s are not supported as part of type MULTIPLES`);
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(`${t}s are not supported as part of type MULTIPLES`);
       });
       if (combinators.length === 1) {
         const [combinator] = combinators;
@@ -611,8 +605,8 @@ let returnCode: ReturnCode = OK;
           case 'number':
             return gen.literalCombinator(s);
         }
-        // eslint-disable-next-line
-      throw new Error(`${typeof s}s are not supported as part of ENUM`);
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(`${typeof s}s are not supported as part of ENUM`);
       });
       if (combinators.length === 1) {
         const [combinator] = combinators;
@@ -631,9 +625,8 @@ let returnCode: ReturnCode = OK;
         case 'number':
           return [gen.literalCombinator(schema.const)];
       }
-      // eslint-disable-next-line
-    throw new Error(
-      `${typeof schema.const}s are not supported as part of CONST`)
+      // eslint-disable-next-line fp/no-throw
+      throw new Error(`${typeof schema.const}s are not supported as part of CONST`);
     }
     return [];
   }
@@ -692,8 +685,8 @@ let returnCode: ReturnCode = OK;
     ) {
       info(`primitive type "${schema.type}" used outside top-level definitions`);
     }
-    // eslint-disable-next-line
-  for (const key in schema) {
+    // eslint-disable-next-line fp/no-loops
+    for (const key in schema) {
       if (isSupported(key, isRoot) !== true) {
         const escalate = notImplemented('', key, 'field');
         if (escalate !== null) {
@@ -726,8 +719,8 @@ let returnCode: ReturnCode = OK;
       // skip checks
       return gen.unknownType;
     }
-    // eslint-disable-next-line
-  throw new Error(`unknown schema: ${JSON.stringify(schema)}`);
+    // eslint-disable-next-line fp/no-throw
+    throw new Error(`unknown schema: ${JSON.stringify(schema)}`);
   }
 
   type Examples = Array<unknown>;
@@ -760,8 +753,8 @@ let returnCode: ReturnCode = OK;
     if (typeof examples === 'undefined') {
       return [];
     }
-    // eslint-disable-next-line
-  throw new Error("Unexpected format of examples");
+    // eslint-disable-next-line fp/no-throw
+    throw new Error('Unexpected format of examples');
   }
 
   function extractDefaultValue(schema: JSONSchema7Definition): JSONSchema7['default'] {
@@ -902,7 +895,7 @@ let returnCode: ReturnCode = OK;
   function fromFile(schema: JSONSchema7): Array<DefInput> {
     const namedDefs = fromDefinitions(schema.definitions);
     if (namedDefs.map(({ dec: { name } }) => name).includes(defaultExport)) {
-      warning('Naming clash, ignoring default export');
+      warning('naming clash, ignoring default export');
       return namedDefs;
     }
     const rootDef = fromRoot(schema);
@@ -922,12 +915,11 @@ let returnCode: ReturnCode = OK;
   function constructDefs(defInputs: Array<DefInput>): Array<Def> {
     const metas: Record<string, DefMeta> = {};
     defInputs.forEach((defInput: DefInput) => {
-      // eslint-disable-next-line
-    metas[defInput.dec.name] = defInput.meta;
+      // eslint-disable-next-line fp/no-mutation
+      metas[defInput.dec.name] = defInput.meta;
     });
     const decs = defInputs.map(({ dec }) => dec);
-    // eslint-disable-next-line
-  return gen.sort(decs).map((dec) => {
+    return gen.sort(decs).map((dec) => {
       const typeName = dec.name;
       const meta = metas[typeName];
       const title = meta.title ?? typeName;
@@ -964,12 +956,12 @@ let returnCode: ReturnCode = OK;
   const defs: Array<Def> = constructDefs(inputs);
 
   if (returnCode === ErrorCode.ERROR) {
-    // eslint-disable-next-line
-    throw new Error('Balining because of errors')
+    // eslint-disable-next-line fp/no-throw
+    throw new Error('Balining because of errors');
   }
   if (returnCode === ErrorCode.WARNING && args.strict) {
-    // eslint-disable-next-line
-    throw new Error('Balining because of warnings')
+    // eslint-disable-next-line fp/no-throw
+    throw new Error('Balining because of warnings');
   }
   yield '/*';
   yield '';
@@ -988,8 +980,8 @@ let returnCode: ReturnCode = OK;
   yield `export const schemaId = '${inputSchema.$id}';`;
   yield '';
 
-  // eslint-disable-next-line
-for (const def of defs) {
+  // eslint-disable-next-line fp/no-loops
+  for (const def of defs) {
     const {
       typeName,
       title,
