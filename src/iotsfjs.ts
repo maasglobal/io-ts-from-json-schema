@@ -480,7 +480,25 @@ let returnCode: ReturnCode = OK;
     return baseName.concat(hashName);
   }
 
-  function fromRef(refString: string, name?: string): gen.TypeReference {
+  type RefObject = JSONSchema7 & { $ref: string };
+  function isRefObject(schema: JSONSchema7): schema is RefObject {
+    if (schema.hasOwnProperty('$ref') === false) {
+      return false;
+    }
+    if (typeof schema['$ref'] === 'string') {
+      return true;
+    }
+    // eslint-disable-next-line fp/no-throw
+    throw new Error('broken input');
+  }
+
+  function fromRef(refObject: RefObject, name?: string): gen.TypeReference {
+    const { $ref: refString, $comment: _comment, ...extra } = refObject;
+
+    if (Object.keys(extra).length) {
+      warning(`unexpected key in a $ref object`);
+    }
+
     // eslint-disable-next-line
   let ref;
     try {
@@ -683,12 +701,8 @@ let returnCode: ReturnCode = OK;
         }
       }
     }
-    if ('$ref' in schema) {
-      if (typeof schema['$ref'] === 'undefined') {
-        // eslint-disable-next-line
-      throw new Error("broken input");
-      }
-      return fromRef(schema['$ref']);
+    if (isRefObject(schema)) {
+      return fromRef(schema);
     }
     imps.add("import * as t from 'io-ts';");
     const combinators = [
@@ -790,14 +804,10 @@ let returnCode: ReturnCode = OK;
             },
           ];
         }
-        if ('$ref' in scem) {
+        if (isRefObject(scem)) {
           // ref's do not have meta data
           const title = undefined;
           const description = undefined;
-          if (typeof scem['$ref'] === 'undefined') {
-            // eslint-disable-next-line
-          throw new Error("broken input");
-          }
           return [
             {
               meta: {
@@ -806,7 +816,7 @@ let returnCode: ReturnCode = OK;
                 examples,
                 defaultValue,
               },
-              dec: gen.typeDeclaration(name, fromRef(scem['$ref'], name), true),
+              dec: gen.typeDeclaration(name, fromRef(scem, name), true),
             },
           ];
         }
@@ -867,11 +877,7 @@ let returnCode: ReturnCode = OK;
     const examples = extractExamples(root);
     const defaultValue = extractDefaultValue(root);
 
-    if ('$ref' in root) {
-      if (typeof root['$ref'] === 'undefined') {
-        // eslint-disable-next-line
-        throw new Error("broken input");
-      }
+    if (isRefObject(root)) {
       exps.add(`export default ${defaultExport};`);
       return [
         {
@@ -881,11 +887,7 @@ let returnCode: ReturnCode = OK;
             examples,
             defaultValue,
           },
-          dec: gen.typeDeclaration(
-            defaultExport,
-            fromRef(root['$ref'], defaultExport),
-            true,
-          ),
+          dec: gen.typeDeclaration(defaultExport, fromRef(root, defaultExport), true),
         },
       ];
     }
