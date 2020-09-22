@@ -126,7 +126,6 @@ export const Defined: DefinedC = new DefinedType()
   const Defined = gen.customCombinator('Defined', 'Defined');
 
   const supportedEverywhere = [
-    '$ref',
     '$id',
     'title',
     'description',
@@ -160,6 +159,7 @@ export const Defined: DefinedC = new DefinedType()
     'default',
     'examples',
   ];
+  const supportedOutsideRoot = ['$ref'];
 
   const documentBase = (() => {
     const [, ...reversePath] = args.documentURI.split('/').reverse();
@@ -487,7 +487,7 @@ export const Defined: DefinedC = new DefinedType()
     throw new Error('broken input');
   }
 
-  function fromRef(refObject: RefObject, name?: string): gen.TypeReference {
+  function fromRef(refObject: RefObject): gen.TypeReference {
     const { $ref: refString, $comment: _comment, ...extra } = refObject;
 
     if (Object.keys(extra).length) {
@@ -504,26 +504,24 @@ export const Defined: DefinedC = new DefinedType()
     }
 
     if (ref.filePath === '') {
-      if (name) {
-        exps.add(`export type ${name}C = ${ref.variableName}C;`);
-      }
       return gen.customCombinator(ref.variableName, ref.variableName, [ref.variableName]);
     }
     const importName = calculateImportName(ref.filePath, refString);
     const importPath = calculateImportPath(ref.filePath);
     imps.add(`import * as ${importName} from '${importPath}';`);
-    if (name) {
-      exps.add(`export type ${name}C = ${importName}.${ref.variableName}C;`);
-    }
+
     const variableRef = `${importName}.${ref.variableName}`;
     return gen.customCombinator(variableRef, variableRef, [importName]);
   }
 
   function isSupported(feature: string, isRoot: boolean) {
-    if (isRoot && supportedAtRoot.includes(feature)) {
+    if (supportedEverywhere.includes(feature)) {
       return true;
     }
-    return supportedEverywhere.includes(feature);
+    if (isRoot) {
+      return supportedAtRoot.includes(feature);
+    }
+    return supportedOutsideRoot.includes(feature);
   }
 
   function fromType(schema: JSONSchema7): [gen.TypeReference] | [] {
@@ -675,7 +673,10 @@ export const Defined: DefinedC = new DefinedType()
         return gen.unknownType;
       } else {
         // accept nothing
-        return error('Not sure how to deal with a schema that matches nothing');
+        return gen.unionCombinator([
+          gen.literalCombinator(true),
+          gen.literalCombinator(false),
+        ]);
       }
     }
     if (
@@ -775,23 +776,28 @@ export const Defined: DefinedC = new DefinedType()
       ([k, v]: [string, JSONSchema7Definition]): Array<DefInput> => {
         const scem = v;
         const name = capitalize(k);
-        const examples = extractExamples(scem);
-        const defaultValue = extractDefaultValue(scem);
 
         if (typeof scem === 'boolean') {
-          const title = undefined;
-          const description = undefined;
           return [
             {
               meta: {
-                title,
-                description,
-                examples,
-                defaultValue,
+                title: undefined,
+                description: undefined,
+                examples: [],
+                defaultValue: undefined,
               },
               dec: gen.typeDeclaration(
                 name,
-                error(`Any and never types are not supported by convert.ts`),
+                gen.brandCombinator(
+                  scem
+                    ? gen.unknownType
+                    : gen.unionCombinator([
+                        gen.literalCombinator(true),
+                        gen.literalCombinator(false),
+                      ]),
+                  (_x) => String(scem),
+                  name,
+                ),
                 true,
               ),
             },
@@ -799,17 +805,19 @@ export const Defined: DefinedC = new DefinedType()
         }
         if (isRefObject(scem)) {
           // ref's do not have meta data
-          const title = undefined;
-          const description = undefined;
           return [
             {
               meta: {
-                title,
-                description,
-                examples,
-                defaultValue,
+                title: undefined,
+                description: undefined,
+                examples: [],
+                defaultValue: undefined,
               },
-              dec: gen.typeDeclaration(name, fromRef(scem, name), true),
+              dec: gen.typeDeclaration(
+                name,
+                gen.brandCombinator(fromRef(scem), (_x) => String(true), name),
+                true,
+              ),
             },
           ];
         }
@@ -818,8 +826,8 @@ export const Defined: DefinedC = new DefinedType()
             meta: {
               title: scem.title,
               description: scem.description,
-              examples,
-              defaultValue,
+              examples: extractExamples(scem),
+              defaultValue: extractDefaultValue(scem),
             },
             dec: gen.typeDeclaration(
               name,
@@ -836,12 +844,16 @@ export const Defined: DefinedC = new DefinedType()
     );
   }
 
-  function fromNonRefRoot(schema: JSONSchema7): Array<DefInput> {
+  function fromRoot(root: JSONSchema7): Array<DefInput> {
     // root schema info is printed in the beginning of the file
     const title = defaultExport;
     const description = 'The default export. More information at the top.';
-    const examples = extractExamples(schema);
-    const defaultValue = extractDefaultValue(schema);
+    const examples = extractExamples(root);
+    const defaultValue = extractDefaultValue(root);
+
+    imps.add("import * as t from 'io-ts';");
+    exps.add(`export default ${defaultExport};`);
+
     return [
       {
         meta: {
@@ -853,43 +865,16 @@ export const Defined: DefinedC = new DefinedType()
         dec: gen.typeDeclaration(
           defaultExport,
           gen.brandCombinator(
-            fromSchema(schema, true),
-            (x) => generateChecks(x, schema),
+            isRefObject(root)
+              ? error('schema root can not be a $ref object')
+              : fromSchema(root, true),
+            (x) => generateChecks(x, root),
             defaultExport,
           ),
           true,
         ),
       },
     ];
-  }
-
-  function fromRoot(root: JSONSchema7): Array<DefInput> {
-    // root schema info is printed in the beginning of the file
-    const title = defaultExport;
-    const description = 'The default export. More information at the top.';
-    const examples = extractExamples(root);
-    const defaultValue = extractDefaultValue(root);
-
-    if (isRefObject(root)) {
-      exps.add(`export default ${defaultExport};`);
-      return [
-        {
-          meta: {
-            title,
-            description,
-            examples,
-            defaultValue,
-          },
-          dec: gen.typeDeclaration(defaultExport, fromRef(root, defaultExport), true),
-        },
-      ];
-    }
-    const items = fromNonRefRoot(root);
-    if (items.length > 0) {
-      imps.add("import * as t from 'io-ts';");
-      exps.add(`export default ${defaultExport};`);
-    }
-    return items;
   }
 
   function fromFile(schema: JSONSchema7): Array<DefInput> {
