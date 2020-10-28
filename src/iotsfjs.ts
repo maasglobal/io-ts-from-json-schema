@@ -30,6 +30,39 @@ export function* iotsfjs(
     (imp: string) => imp.split('^') as [URI, Location],
   );
 
+  const genNeverType = gen.intersectionCombinator([
+    gen.literalCombinator(true),
+    gen.literalCombinator(false),
+  ]);
+
+  const genIntersectionCombinator = (
+    combinators: Array<gen.TypeReference>,
+  ): [gen.TypeReference] | [] => {
+    if (combinators.length === 1) {
+      const [intersection] = combinators;
+      return [intersection];
+    }
+    if (combinators.length > 1) {
+      const intersection = gen.intersectionCombinator(combinators);
+      return [intersection];
+    }
+    return [];
+  };
+
+  const genUnionCombinator = (
+    combinators: Array<gen.TypeReference>,
+  ): [gen.TypeReference] | [] => {
+    if (combinators.length === 1) {
+      const [union] = combinators;
+      return [union];
+    }
+    if (combinators.length > 1) {
+      const union = gen.unionCombinator(combinators);
+      return [union];
+    }
+    return [];
+  };
+
   // START: Ajv Schema Helpers https://github.com/epoberezkin/ajv-keywords
 
   type AjvKeywordsRegexpString = string;
@@ -209,7 +242,23 @@ export const Defined: DefinedC = new DefinedType()
     reportError('INFO', message);
   }
 
-  function notImplemented(pre: string, item: string, post: string, fatal = false) {
+  function notImplemented(
+    pre: string,
+    item: string,
+    post: string,
+    fatal: true,
+  ): gen.TypeReference;
+  function notImplemented(
+    pre: string,
+    item: string,
+    post: string,
+  ): null | gen.TypeReference;
+  function notImplemented(
+    pre: string,
+    item: string,
+    post: string,
+    fatal = false,
+  ): null | gen.TypeReference {
     const isOutsideRoot = supportedAtRoot.includes(item);
     const where = isOutsideRoot ? 'outside top-level definitions' : '';
     const message = [pre, item, post, 'not supported', where]
@@ -250,114 +299,6 @@ export const Defined: DefinedC = new DefinedType()
     }
     const variableName = typenameFromKebab(name);
     return { filePath, variableName };
-  }
-
-  function fromPropertyNames(schema: JSONSchema7): [gen.TypeReference] | [] {
-    if ('propertyNames' in schema && typeof schema.propertyNames !== 'undefined') {
-      return [gen.recordCombinator(fromSchema(schema.propertyNames), gen.unknownType)];
-    }
-    return [];
-  }
-
-  function fromPatternProperties(schema: JSONSchema7): [gen.TypeReference] | [] {
-    if (
-      'patternProperties' in schema &&
-      typeof schema.patternProperties !== 'undefined'
-    ) {
-      // the mapping from pattern to item is lost in the process
-      // See https://github.com/microsoft/TypeScript/issues/6579
-      warning('patternProperty support has limitations');
-
-      type Pattern = string;
-
-      // The Record must also support non-pattern properties
-      const exactPairs = Object.entries(
-        schema.properties ?? {},
-      ).map(<V>([key, value]: [string, V]): [Pattern, V] => [`^${key}$`, value]);
-      const fuzzyPairs = Object.entries(schema.patternProperties);
-      const allPairs = exactPairs.concat(fuzzyPairs);
-      const valueCombinators = allPairs.map(
-        <K extends string, V>([_key, value]: [K, V]) => fromSchema(value),
-      );
-
-      const valueCombinator = (() => {
-        if (valueCombinators.length > 1) {
-          return gen.unionCombinator(valueCombinators);
-        }
-        const [combinator] = valueCombinators;
-        return combinator;
-      })();
-
-      return [gen.recordCombinator(gen.stringType, valueCombinator)];
-    }
-    return [];
-  }
-
-  function fromProperties(schema: JSONSchema7): [gen.TypeReference] | [] {
-    if ('properties' in schema && typeof schema.properties !== 'undefined') {
-      const combinator = gen.partialCombinator(
-        Object.entries(
-          schema.properties,
-        ).map(<K extends string, V>([key, value]: [K, V]) =>
-          gen.property(key, fromSchema(value)),
-        ),
-      );
-      return [combinator];
-    }
-    return [];
-  }
-
-  function toInterfaceCombinator(schema: JSONSchema7): gen.TypeReference {
-    const combinators = [
-      ...fromProperties(schema),
-      ...fromPropertyNames(schema),
-      ...fromPatternProperties(schema),
-    ];
-    const combinator = (() => {
-      if (combinators.length > 1) {
-        return gen.intersectionCombinator(combinators);
-      }
-      if (combinators.length === 1) {
-        const [combinator] = combinators;
-        return combinator;
-      }
-      return gen.interfaceCombinator([]);
-    })();
-
-    if (schema.hasOwnProperty('additionalproperties') === false) {
-      return combinator;
-    }
-    if (typeof schema.additionalProperties !== 'boolean') {
-      const escalate = notImplemented('specific', 'additionalProperties', 'schema', true);
-      if (escalate !== null) {
-        return escalate;
-      }
-    }
-    if (schema.additionalProperties === false) {
-      return gen.exactCombinator(combinator);
-    }
-    return combinator;
-  }
-
-  function toArrayCombinator(schema: JSONSchema7): gen.TypeReference {
-    if (
-      'items' in schema &&
-      typeof schema.items !== 'undefined' &&
-      typeof schema.items !== 'boolean'
-    ) {
-      if (schema.items instanceof Array) {
-        if ('additionalItems' in schema && schema.additionalItems === false) {
-          const combinators = schema.items.map((s) => fromSchema(s));
-          return gen.tupleCombinator(combinators);
-        }
-        // eslint-disable-next-line fp/no-throw
-        throw new Error(
-          'tuples with ...rest are not supported, set additionalItems false',
-        );
-      }
-      return gen.arrayCombinator(fromSchema(schema.items));
-    }
-    return gen.unknownArrayType;
   }
 
   function checkPattern(x: string, pattern: string): string {
@@ -525,50 +466,149 @@ export const Defined: DefinedC = new DefinedType()
   }
 
   function fromType(schema: JSONSchema7): [gen.TypeReference] | [] {
-    if (Array.isArray(schema.type)) {
-      const combinators = schema.type.map((t) => {
-        switch (t) {
-          case 'string':
-            return gen.stringType;
-          case 'number':
-          case 'integer':
-            return gen.numberType;
-          case 'boolean':
-            return gen.booleanType;
-          case 'null':
-            return gen.nullType;
-        }
-        // eslint-disable-next-line fp/no-throw
-        throw new Error(`${t}s are not supported as part of type MULTIPLES`);
-      });
-      if (combinators.length === 1) {
-        const [combinator] = combinators;
-        return [combinator];
+    if (typeof schema.type === 'undefined') {
+      return [];
+    }
+    const types = Array.isArray(schema.type) ? schema.type : [schema.type];
+
+    const combinators = types.flatMap((t): [gen.TypeReference] | [] => {
+      switch (t) {
+        case 'string':
+          return [gen.stringType];
+        case 'number':
+        case 'integer':
+          return [gen.numberType];
+        case 'boolean':
+          return [gen.booleanType];
+        case 'null':
+          return [gen.nullType];
+        case 'array':
+          if (schema.hasOwnProperty('items')) {
+            return []; // trust items validator to validate array
+          }
+          return [gen.unknownArrayType];
+        case 'object':
+          if (schema.hasOwnProperty('properties')) {
+            return []; // trust properties validator to validate object
+          }
+          if (schema.hasOwnProperty('patternProperties')) {
+            return []; // trust pattern properties validator to validate object
+          }
+          if (schema.hasOwnProperty('propertyNames')) {
+            return []; // trust property names validator to validate object
+          }
+          if (schema.hasOwnProperty('additionalProperties')) {
+            return []; // trust additional properties validator to validate object
+          }
+          return [gen.unknownRecordType];
+        default:
+          return [notImplemented('', JSON.stringify(schema.type), 'type', true)];
       }
-      return [gen.unionCombinator(combinators)];
+    });
+
+    return genUnionCombinator(combinators);
+  }
+
+  function fromProperties(schema: JSONSchema7): [gen.TypeReference] | [] {
+    if ('properties' in schema && typeof schema.properties !== 'undefined') {
+      if (schema.type !== 'object') {
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(
+          'properties keyword is not supported outside explicit object definitions. See https://github.com/maasglobal/io-ts-from-json-schema/issues/33',
+        );
+      }
+      const combinator = gen.partialCombinator(
+        Object.entries(
+          schema.properties,
+        ).map(<K extends string, V>([key, value]: [K, V]) =>
+          gen.property(key, fromSchema(value)),
+        ),
+      );
+      return [combinator];
     }
-    switch (schema.type) {
-      case 'string':
-        return [gen.stringType];
-      case 'number':
-      case 'integer':
-        return [gen.numberType];
-      case 'boolean':
-        return [gen.booleanType];
-      case 'null':
-        return [gen.nullType];
-      case 'object':
-        return [toInterfaceCombinator(schema)];
-      case 'array':
-        return [toArrayCombinator(schema)];
+    return [];
+  }
+
+  function fromPropertyNames(schema: JSONSchema7): [gen.TypeReference] | [] {
+    if ('propertyNames' in schema && typeof schema.propertyNames !== 'undefined') {
+      if (schema.type !== 'object') {
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(
+          'propertyNames keyword is not supported outside explicit object definitions. See https://github.com/maasglobal/io-ts-from-json-schema/issues/33',
+        );
+      }
+
+      return [gen.recordCombinator(fromSchema(schema.propertyNames), gen.unknownType)];
     }
-    if (typeof schema.type !== 'undefined') {
-      const escalate = notImplemented('', JSON.stringify(schema.type), 'type', true);
-      if (escalate !== null) {
-        return [escalate];
+    return [];
+  }
+
+  function fromPatternProperties(schema: JSONSchema7): [gen.TypeReference] | [] {
+    if (
+      'patternProperties' in schema &&
+      typeof schema.patternProperties !== 'undefined'
+    ) {
+      if (schema.type !== 'object') {
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(
+          'patternProperties keyword is not supported outside explicit object definitions. See https://github.com/maasglobal/io-ts-from-json-schema/issues/33',
+        );
+      }
+
+      // the mapping from pattern to item is lost in the process
+      // See https://github.com/microsoft/TypeScript/issues/6579
+      warning('patternProperty support has limitations');
+
+      type Pattern = string;
+
+      // The Record must also support non-pattern properties
+      const exactPairs = Object.entries(
+        schema.properties ?? {},
+      ).map(<V>([key, value]: [string, V]): [Pattern, V] => [`^${key}$`, value]);
+      const fuzzyPairs = Object.entries(schema.patternProperties);
+      const allPairs = exactPairs.concat(fuzzyPairs);
+      const valueCombinators = allPairs.map(
+        <K extends string, V>([_key, value]: [K, V]) => fromSchema(value),
+      );
+
+      const [valueCombinator] = genUnionCombinator(valueCombinators);
+      if (typeof valueCombinator !== 'undefined') {
+        return [gen.recordCombinator(gen.stringType, valueCombinator)];
       }
     }
     return [];
+  }
+
+  function fromAdditionalProperties(schema: JSONSchema7): [gen.TypeReference] | [] {
+    if (
+      'additionalProperties' in schema &&
+      typeof schema.additionalProperties !== 'undefined'
+    ) {
+      if (schema.type !== 'object') {
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(
+          'additionalProperties keyword is not supported outside explicit object definitions. See https://github.com/maasglobal/io-ts-from-json-schema/issues/33',
+        );
+      }
+      if (schema.additionalProperties === false) {
+        // avoid problems related to Record<string, never>
+        return [];
+      }
+
+      return [
+        gen.recordCombinator(gen.stringType, fromSchema(schema.additionalProperties)),
+      ];
+    }
+    return [];
+  }
+
+  function fromPropertyRules(schema: JSONSchema7): [gen.TypeReference] | [] {
+    return genIntersectionCombinator([
+      ...fromProperties(schema),
+      ...fromPropertyNames(schema),
+      ...fromPatternProperties(schema),
+      ...fromAdditionalProperties(schema),
+    ]);
   }
 
   function fromRequired(schema: JSONSchema7): [gen.TypeReference] | [] {
@@ -584,11 +624,52 @@ export const Defined: DefinedC = new DefinedType()
     return [];
   }
 
+  function fromObjectKeywords(schema: JSONSchema7): Array<gen.TypeReference> {
+    return [...fromPropertyRules(schema), ...fromRequired(schema)];
+  }
+
+  function fromItems(schema: JSONSchema7): [gen.TypeReference] | [] {
+    if ('items' in schema && typeof schema.items !== 'undefined') {
+      if (schema.type !== 'array') {
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(
+          'items keyword is not supported outside explicit array definitions. See https://github.com/maasglobal/io-ts-from-json-schema/issues/33',
+        );
+      }
+      if (schema.items === true) {
+        // anything goes
+        return [];
+      }
+      if (schema.items === false) {
+        // no item is valid, empty tuple
+        return [gen.tupleCombinator([])];
+      }
+      if (schema.items instanceof Array) {
+        // tuple
+        if ('additionalItems' in schema && schema.additionalItems === false) {
+          const combinators = schema.items.map((s) => fromSchema(s));
+          return [gen.tupleCombinator(combinators)];
+        }
+        // eslint-disable-next-line fp/no-throw
+        throw new Error(
+          'tuples with ...rest are not supported, set additionalItems false',
+        );
+      }
+      // array
+      return [gen.arrayCombinator(fromSchema(schema.items))];
+    }
+    return [];
+  }
+
   function fromContains(schema: JSONSchema7): [gen.TypeReference] | [] {
     if ('contains' in schema && typeof schema.contains !== 'undefined') {
       warning('contains field not supported');
     }
     return [];
+  }
+
+  function fromArrayKeywords(schema: JSONSchema7): Array<gen.TypeReference> {
+    return [...fromItems(schema), ...fromContains(schema)];
   }
 
   function fromEnum(schema: JSONSchema7): [gen.TypeReference] | [] {
@@ -606,11 +687,7 @@ export const Defined: DefinedC = new DefinedType()
         // eslint-disable-next-line fp/no-throw
         throw new Error(`${typeof s}s are not supported as part of ENUM`);
       });
-      if (combinators.length === 1) {
-        const [combinator] = combinators;
-        return [combinator];
-      }
-      return [gen.unionCombinator(combinators)];
+      return genUnionCombinator(combinators);
     }
     return [];
   }
@@ -644,11 +721,7 @@ export const Defined: DefinedC = new DefinedType()
   function fromAnyOf(schema: JSONSchema7): [gen.TypeReference] | [] {
     if ('anyOf' in schema && typeof schema.anyOf !== 'undefined') {
       const combinators = schema.anyOf.map((s) => fromSchema(s));
-      if (combinators.length === 1) {
-        const [combinator] = combinators;
-        return [combinator];
-      }
-      return [gen.unionCombinator(combinators)];
+      return genUnionCombinator(combinators);
     }
     return [];
   }
@@ -656,11 +729,7 @@ export const Defined: DefinedC = new DefinedType()
   function fromOneOf(schema: JSONSchema7): [gen.TypeReference] | [] {
     if ('oneOf' in schema && typeof schema.oneOf !== 'undefined') {
       const combinators = schema.oneOf.map((s) => fromSchema(s));
-      if (combinators.length === 1) {
-        const [combinator] = combinators;
-        return [combinator];
-      }
-      return [gen.unionCombinator(combinators)];
+      return genUnionCombinator(combinators);
     }
     return [];
   }
@@ -673,10 +742,7 @@ export const Defined: DefinedC = new DefinedType()
         return gen.unknownType;
       } else {
         // accept nothing
-        return gen.unionCombinator([
-          gen.literalCombinator(true),
-          gen.literalCombinator(false),
-        ]);
+        return genNeverType;
       }
     }
     if (
@@ -701,8 +767,8 @@ export const Defined: DefinedC = new DefinedType()
     imps.add("import * as t from 'io-ts';");
     const combinators = [
       ...fromType(schema),
-      ...fromRequired(schema),
-      ...fromContains(schema),
+      ...fromObjectKeywords(schema),
+      ...fromArrayKeywords(schema),
       ...fromEnum(schema),
       ...fromConst(schema),
       ...fromAllOf(schema),
@@ -789,12 +855,7 @@ export const Defined: DefinedC = new DefinedType()
               dec: gen.typeDeclaration(
                 name,
                 gen.brandCombinator(
-                  scem
-                    ? gen.unknownType
-                    : gen.unionCombinator([
-                        gen.literalCombinator(true),
-                        gen.literalCombinator(false),
-                      ]),
+                  scem ? gen.unknownType : genNeverType,
                   (_x) => String(scem),
                   name,
                 ),

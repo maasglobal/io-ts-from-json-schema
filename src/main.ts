@@ -85,6 +85,7 @@ export const processFile = (
   const outputFile = path.join(argv.outputDir, relativeP.split('.json').join('.ts'));
 
   const outputData = iotsfjs(inputSchema, args, stderr);
+
   if (argv.emit) {
     emit(outputFile, outputData);
   }
@@ -100,9 +101,13 @@ export function main({ args, stderr, stdout }: Process) {
   const { inputFile: inputGlob, ...commonArgs } = parser(args);
   const schemaFiles = glob.sync(inputGlob);
   stdout.write(`Converting ${schemaFiles.length} schema files from ${inputGlob}.\n`);
-  schemaFiles
-    .sort()
-    .forEach((inputFile) =>
-      processFile({ ...commonArgs, inputFile }, { stderr, stdout }),
-    );
+  schemaFiles.sort().forEach((inputFile) => {
+    try {
+      processFile({ ...commonArgs, inputFile }, { stderr, stdout });
+    } catch (e) {
+      stderr.write(`iotsfjs crash while processing ${path.resolve(inputFile)}${'\n'}`);
+      // eslint-disable-next-line fp/no-throw
+      throw e;
+    }
+  });
 }
