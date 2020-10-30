@@ -1,6 +1,6 @@
 {
   "name": "io-ts-from-json-schema",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Iotsfjs is a static code generation utility used for converting json schema files into static TypeScript types and io-ts runtime validators.",
   "main": "lib/cli.js",
   "files": [
@@ -17,7 +17,8 @@
     "eslint": "eslint --max-warnings=0 '**/*.{ts,js,json}'",
     "lint": "yarn eslint",
     "ci": "yarn lint && yarn typecheck && yarn test && yarn build",
-    "deploy-npm": "yarn ci && yarn publish"
+    "deploy-npm": "yarn ci && yarn publish",
+    "deploy-alpha": "yarn deploy-npm --tag alpha"
   },
   "dependencies": {
     "glob": "^7.1.6",
