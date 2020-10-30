@@ -3006,9 +3006,9 @@ lodash@^4.17.19:
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
   integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
 
-"maas-schemas-git-develop@git://github.com/cyberixae/maas-schemas.git#fix_broken_ref_objects":
+"maas-schemas-git-develop@git://github.com/cyberixae/maas-schemas.git#add_explicit_type_to_arrays_and_objects":
   version "0.0.0"
-  resolved "git://github.com/cyberixae/maas-schemas.git#e7e5b16349e4241a03dcb3a184eb8926c4fe2d2b"
+  resolved "git://github.com/cyberixae/maas-schemas.git#0b87ba367f2a060c94d60cb447c108d4914df111"
 
 make-dir@^3.0.0:
   version "3.1.0"
