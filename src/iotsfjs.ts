@@ -160,6 +160,7 @@ export const Defined: DefinedC = new DefinedType()
 
   const supportedEverywhere = [
     '$id',
+    '$comment',
     'title',
     'description',
     'definitions',
