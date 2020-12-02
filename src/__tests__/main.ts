@@ -1,8 +1,8 @@
+import { execSync } from 'child_process';
 import * as fs from 'fs';
+import { glob } from 'glob';
 import * as path from 'path';
 import { Writable } from 'stream';
-import { execSync } from 'child_process';
-import { glob } from 'glob';
 import * as ts from 'typescript';
 
 import { main } from '../main';

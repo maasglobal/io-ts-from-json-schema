@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
-import * as path from 'path';
 import * as crypto from 'crypto';
-import * as stream from 'stream';
 import * as gen from 'io-ts-codegen';
 import { JSONSchema7, JSONSchema7Definition } from 'json-schema';
+import * as path from 'path';
+import * as stream from 'stream';
+
 import { printC } from './codegen/printc';
 
 export type Args = {
@@ -106,7 +107,7 @@ export function* iotsfjs(
   // END: Ajv Schema Helpers
 
   function capitalize(word: string) {
-    const empty: '' = '';
+    const empty = '' as const;
     const [c, ...cs] = word.split(empty);
     return [c.toUpperCase(), ...cs].join(empty);
   }
