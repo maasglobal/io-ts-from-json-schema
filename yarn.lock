@@ -3008,7 +3008,7 @@ lodash@^4.17.19:
 
 "maas-schemas-git-develop@git://github.com/cyberixae/maas-schemas.git#add_explicit_type_to_arrays_and_objects":
   version "0.0.0"
-  resolved "git://github.com/cyberixae/maas-schemas.git#0b87ba367f2a060c94d60cb447c108d4914df111"
+  resolved "git://github.com/cyberixae/maas-schemas.git#fc1e3f05bf67f0ff8e76fec44449bfa6f1e7398c"
 
 make-dir@^3.0.0:
   version "3.1.0"

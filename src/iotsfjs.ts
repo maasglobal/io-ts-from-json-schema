@@ -302,69 +302,72 @@ export const Defined: DefinedC = new DefinedType()
     return { filePath, variableName };
   }
 
-  function checkPattern(x: string, pattern: string): string {
+  type JSVar = string;
+  type JSBoolean = string;
+
+  function checkPattern(jx: JSVar, pattern: string): JSBoolean {
     const stringLiteral = JSON.stringify(pattern);
-    return `( typeof x !== 'string' || ${x}.match(RegExp(${stringLiteral})) !== null )`;
+    return `( typeof ${jx} !== 'string' || ${jx}.match(RegExp(${stringLiteral})) !== null )`;
   }
 
-  function checkRegexp(x: string, regexp: AjvKeywordsRegexp): string {
+  function checkRegexp(jx: JSVar, regexp: AjvKeywordsRegexp): JSBoolean {
     const { pattern, flags } = getRegexpObject(regexp);
     const patternLiteral = JSON.stringify(pattern);
     const flagsLiteral = JSON.stringify(flags);
-    return `( typeof x !== 'string' || ${x}.match(RegExp(${patternLiteral}, ${flagsLiteral})) !== null )`;
+    return `( typeof ${jx} !== 'string' || ${jx}.match(RegExp(${patternLiteral}, ${flagsLiteral})) !== null )`;
   }
 
-  function checkMinLength(x: string, minLength: number): string {
-    return `( typeof x !== 'string' || ${x}.length >= ${minLength} )`;
+  function checkMinLength(jx: JSVar, minLength: number): JSBoolean {
+    return `( typeof ${jx} !== 'string' || ${jx}.length >= ${minLength} )`;
   }
 
-  function checkMaxLength(x: string, maxLength: number): string {
-    return `( typeof x !== 'string' || ${x}.length <= ${maxLength} )`;
+  function checkMaxLength(jx: JSVar, maxLength: number): JSBoolean {
+    return `( typeof ${jx} !== 'string' || ${jx}.length <= ${maxLength} )`;
   }
 
-  function checkMinimum(x: string, minimum: number): string {
-    return `( typeof x !== 'number' || ${x} >= ${minimum} )`;
+  function checkMinimum(jx: JSVar, minimum: number): JSBoolean {
+    return `( typeof ${jx} !== 'number' || ${jx} >= ${minimum} )`;
   }
 
-  function checkMaximum(x: string, maximum: number): string {
-    return `( typeof x !== 'number' || ${x} <= ${maximum} )`;
+  function checkMaximum(jx: JSVar, maximum: number): JSBoolean {
+    return `( typeof ${jx} !== 'number' || ${jx} <= ${maximum} )`;
   }
 
-  function checkMultipleOf(x: string, divisor: number): string {
-    return `( typeof x !== 'number' || ${x} % ${divisor} === 0 )`;
+  function checkMultipleOf(jx: JSVar, divisor: number): JSBoolean {
+    return `( typeof ${jx} !== 'number' || ${jx} % ${divisor} === 0 )`;
   }
 
-  function checkInteger(x: string): string {
-    return `( Number.isInteger(${x}) )`;
+  function checkInteger(jx: JSVar): JSBoolean {
+    return `( Number.isInteger(${jx}) )`;
   }
 
-  function checkMinItems(x: string, minItems: number): string {
-    return `( Array.isArray(x) === false || ${x}.length >= ${minItems} )`;
+  function checkMinItems(jx: JSVar, minItems: number): JSBoolean {
+    return `( Array.isArray(${jx}) === false || ${jx}.length >= ${minItems} )`;
   }
 
-  function checkMaxItems(x: string, maxItems: number): string {
-    return `( Array.isArray(x) === false || ${x}.length <= ${maxItems} )`;
+  function checkMaxItems(jx: JSVar, maxItems: number): JSBoolean {
+    return `( Array.isArray(${jx}) === false || ${jx}.length <= ${maxItems} )`;
   }
 
-  function checkUniqueItems(x: string): string {
-    return `( Array.isArray(x) === false || ${x}.length === [...new Set(x)].length )`;
+  function checkUniqueItems(jx: JSVar): JSBoolean {
+    return `( Array.isArray(${jx}) === false || ${jx}.length === [...new Set(${jx})].length )`;
   }
 
-  function generateChecks(x: string, schema: JSONSchema7): string {
+  function generateChecks(jx: JSVar, schema: JSONSchema7): JSBoolean {
     const checks: Array<string> = [
-      ...(schema.pattern ? [checkPattern(x, schema.pattern)] : []),
+      ...(schema.pattern ? [checkPattern(jx, schema.pattern)] : []),
       ...((schema as AjvSchema).regexp
-        ? [checkRegexp(x, (schema as AjvSchema).regexp)]
+        ? [checkRegexp(jx, (schema as AjvSchema).regexp)]
         : []),
-      ...(schema.minLength ? [checkMinLength(x, schema.minLength)] : []),
-      ...(schema.maxLength ? [checkMaxLength(x, schema.maxLength)] : []),
-      ...(schema.minimum ? [checkMinimum(x, schema.minimum)] : []),
-      ...(schema.maximum ? [checkMaximum(x, schema.maximum)] : []),
-      ...(schema.multipleOf ? [checkMultipleOf(x, schema.multipleOf)] : []),
-      ...(schema.type === 'integer' ? [checkInteger(x)] : []),
-      ...(schema.minItems ? [checkMinItems(x, schema.minItems)] : []),
-      ...(schema.maxItems ? [checkMaxItems(x, schema.maxItems)] : []),
-      ...(schema.uniqueItems === true ? [checkUniqueItems(x)] : []),
+      ...(schema.minLength ? [checkMinLength(jx, schema.minLength)] : []),
+      ...(schema.maxLength ? [checkMaxLength(jx, schema.maxLength)] : []),
+      ...(schema.minimum ? [checkMinimum(jx, schema.minimum)] : []),
+      ...(schema.maximum ? [checkMaximum(jx, schema.maximum)] : []),
+      ...(schema.multipleOf ? [checkMultipleOf(jx, schema.multipleOf)] : []),
+      ...(schema.type === 'integer' ? [checkInteger(jx)] : []),
+      ...(schema.minItems ? [checkMinItems(jx, schema.minItems)] : []),
+      ...(schema.maxItems ? [checkMaxItems(jx, schema.maxItems)] : []),
+      ...(schema.uniqueItems === true ? [checkUniqueItems(jx)] : []),
     ];
     if (checks.length < 1) {
       return 'true';
@@ -895,7 +898,7 @@ export const Defined: DefinedC = new DefinedType()
               name,
               gen.brandCombinator(
                 fromSchema(scem, true),
-                (x) => generateChecks(x, scem),
+                (jx) => generateChecks(jx, scem),
                 name,
               ),
               true,
@@ -930,7 +933,7 @@ export const Defined: DefinedC = new DefinedType()
             isRefObject(root)
               ? error('schema root can not be a $ref object')
               : fromSchema(root, true),
-            (x) => generateChecks(x, root),
+            (jx) => generateChecks(jx, root),
             defaultExport,
           ),
           true,
