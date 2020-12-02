@@ -16,7 +16,7 @@
     "build": "yarn clean && tsc && chmod u+x ./lib/cli.js",
     "eslint": "eslint --max-warnings=0 '**/*.{ts,js,json}'",
     "lint": "yarn eslint",
-    "ci": "yarn lint && yarn typecheck && yarn test && yarn build",
+    "ci": "yarn typecheck && yarn test && yarn lint && yarn build",
     "deploy-npm": "yarn ci && yarn publish",
     "deploy-alpha": "yarn deploy-npm --tag alpha"
   },
