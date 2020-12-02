@@ -244,34 +244,13 @@ export const Defined: DefinedC = new DefinedType()
     reportError('INFO', message);
   }
 
-  function notImplemented(
-    pre: string,
-    item: string,
-    post: string,
-    fatal: true,
-  ): gen.TypeReference;
-  function notImplemented(
-    pre: string,
-    item: string,
-    post: string,
-  ): null | gen.TypeReference;
-  function notImplemented(
-    pre: string,
-    item: string,
-    post: string,
-    fatal = false,
-  ): null | gen.TypeReference {
+  function notImplemented(item: string, kind: string): void {
     const isOutsideRoot = supportedAtRoot.includes(item);
     const where = isOutsideRoot ? 'outside top-level definitions' : '';
-    const message = [pre, item, post, 'not supported', where]
+    const message = [item, kind, 'not supported', where]
       .filter((s) => s.length > 0)
       .join(' ');
-
-    if (fatal !== true && isOutsideRoot) {
-      warning(message);
-      return null;
-    }
-    return error(message);
+    warning(message);
   }
 
   function parseRef(ref: string) {
@@ -507,7 +486,8 @@ export const Defined: DefinedC = new DefinedType()
           }
           return [gen.unknownRecordType];
         default:
-          return [notImplemented('', JSON.stringify(schema.type), 'type', true)];
+          notImplemented(JSON.stringify(schema.type), 'type');
+          return [gen.unknownType];
       }
     });
 
@@ -760,10 +740,7 @@ export const Defined: DefinedC = new DefinedType()
     // eslint-disable-next-line fp/no-loops
     for (const key in schema) {
       if (isSupported(key, isRoot) !== true) {
-        const escalate = notImplemented('', key, 'field');
-        if (escalate !== null) {
-          return escalate;
-        }
+        notImplemented(key, 'field');
       }
     }
     if (isRefObject(schema)) {
@@ -1012,11 +989,11 @@ export const Defined: DefinedC = new DefinedType()
 
   if (returnCode === ErrorCode.ERROR) {
     // eslint-disable-next-line fp/no-throw
-    throw new Error('Balining because of errors');
+    throw new Error('Bailing because of errors');
   }
   if (returnCode === ErrorCode.WARNING && args.strict) {
     // eslint-disable-next-line fp/no-throw
-    throw new Error('Balining because of warnings');
+    throw new Error('Bailing because of warnings');
   }
   yield '/*';
   yield '';
