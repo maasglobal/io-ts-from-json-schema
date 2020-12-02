@@ -188,6 +188,7 @@ export const Defined: DefinedC = new DefinedType()
     'maxLength',
     'pattern',
     'regexp',
+    'format',
     'minItems',
     'maxItems',
     'uniqueItems',
@@ -285,6 +286,14 @@ export const Defined: DefinedC = new DefinedType()
   type JSVar = string;
   type JSBoolean = string;
 
+  function checkFormat(jx: JSVar, format: string): JSBoolean {
+    if (format === 'ipv4') {
+      return `( typeof ${jx} !== 'string' || ((octets) => octets.length === 4 && octets.map(Number).every((octet) => Number.isInteger(octet) && octet >= 0x00 && octet <= 0xff))(${jx}.split('.')) )`;
+    }
+    notImplemented(format, 'format');
+    return String(true);
+  }
+
   function checkPattern(jx: JSVar, pattern: string): JSBoolean {
     const stringLiteral = JSON.stringify(pattern);
     return `( typeof ${jx} !== 'string' || ${jx}.match(RegExp(${stringLiteral})) !== null )`;
@@ -339,6 +348,7 @@ export const Defined: DefinedC = new DefinedType()
       ...((schema as AjvSchema).regexp
         ? [checkRegexp(jx, (schema as AjvSchema).regexp)]
         : []),
+      ...(schema.format ? [checkFormat(jx, schema.format)] : []),
       ...(schema.minLength ? [checkMinLength(jx, schema.minLength)] : []),
       ...(schema.maxLength ? [checkMaxLength(jx, schema.maxLength)] : []),
       ...(schema.minimum ? [checkMinimum(jx, schema.minimum)] : []),
