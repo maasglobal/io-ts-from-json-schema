@@ -180,6 +180,7 @@ export const Defined: DefinedC = new DefinedType()
     'additionalItems',
   ];
   const supportedAtRoot = [
+    '$schema',
     'minimum',
     'maximum',
     'multipleOf',
@@ -910,6 +911,10 @@ export const Defined: DefinedC = new DefinedType()
   }
 
   function fromRoot(root: JSONSchema7): Array<DefInput> {
+    if (root.hasOwnProperty('$schema') === false) {
+      warning(`missing $schema declaration`);
+    }
+
     // root schema info is printed in the beginning of the file
     const title = defaultExport;
     const description = 'The default export. More information at the top.';
