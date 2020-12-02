@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs';
-import * as path from 'path';
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 import * as crypto from 'crypto';
-import * as stream from 'stream';
-
-import * as yargs from 'yargs';
+import * as fs from 'fs';
 import { glob } from 'glob';
+import * as path from 'path';
+import * as stream from 'stream';
+import * as yargs from 'yargs';
 
-import { iotsfjs, Args } from './iotsfjs';
+import { Args, iotsfjs } from './iotsfjs';
 
 export const parser = (args: Array<string>) => {
   const { argv } = yargs(args)

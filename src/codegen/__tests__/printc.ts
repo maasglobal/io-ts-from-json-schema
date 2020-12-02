@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import * as gen from 'io-ts-codegen';
+
 import { printC } from '../printc';
 
 describe('printC', () => {
