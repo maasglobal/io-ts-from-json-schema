@@ -172,7 +172,6 @@ export const Defined: DefinedC = new DefinedType()
     'required',
     'additionalProperties',
     'allOf',
-    'anyOf',
     'oneOf',
     'enum',
     'const',
@@ -714,14 +713,6 @@ export const Defined: DefinedC = new DefinedType()
     return [];
   }
 
-  function fromAnyOf(schema: JSONSchema7): [gen.TypeReference] | [] {
-    if ('anyOf' in schema && typeof schema.anyOf !== 'undefined') {
-      const combinators = schema.anyOf.map((s) => fromSchema(s));
-      return genUnionCombinator(combinators);
-    }
-    return [];
-  }
-
   function fromOneOf(schema: JSONSchema7): [gen.TypeReference] | [] {
     if ('oneOf' in schema && typeof schema.oneOf !== 'undefined') {
       const combinators = schema.oneOf.map((s) => fromSchema(s));
@@ -765,7 +756,6 @@ export const Defined: DefinedC = new DefinedType()
       ...fromEnum(schema),
       ...fromConst(schema),
       ...fromAllOf(schema),
-      ...fromAnyOf(schema),
       ...fromOneOf(schema),
     ];
     if (combinators.length > 1) {
