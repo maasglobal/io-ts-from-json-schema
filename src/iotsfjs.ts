@@ -16,6 +16,7 @@ export type Args = {
   importHashLength: number;
   importHashAlgorithm: string;
   strict: boolean;
+  maskNull: boolean;
 };
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
@@ -158,6 +159,21 @@ export const Defined: DefinedC = new DefinedType()
 `;
 
   const Defined = gen.customCombinator('Defined', 'Defined');
+
+  const nullHelper = `
+export interface NullBrand {
+  readonly Null: unique symbol
+}
+export type NullC = t.BrandC<t.UnknownC, NullBrand>;
+export const Null: NullC = t.brand(
+  t.unknown,
+  (n): n is t.Branded<unknown, NullBrand> => n === null,
+  'Null'
+)
+export type Null = t.TypeOf<typeof Null>
+`;
+
+  const Null = gen.customCombinator('Null', 'Null');
 
   const supportedEverywhere = [
     '$id',
@@ -476,6 +492,10 @@ export const Defined: DefinedC = new DefinedType()
         case 'boolean':
           return [gen.booleanType];
         case 'null':
+          if (args.maskNull) {
+            helpers.add(nullHelper);
+            return [Null];
+          }
           return [gen.nullType];
         case 'array':
           if (schema.hasOwnProperty('items')) {
@@ -672,6 +692,10 @@ export const Defined: DefinedC = new DefinedType()
     if ('enum' in schema && typeof schema.enum !== 'undefined') {
       const combinators = schema.enum.map((s) => {
         if (s === null) {
+          if (args.maskNull) {
+            helpers.add(nullHelper);
+            return Null;
+          }
           return gen.nullType;
         }
         switch (typeof s) {
