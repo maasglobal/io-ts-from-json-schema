@@ -16,6 +16,7 @@ export const parser = (args: Array<string>) => {
     .option('inputFile', { type: 'string', demandOption: true })
     .option('outputDir', { type: 'string', demandOption: true })
     .option('strict', { type: 'boolean', default: false })
+    .option('maskNull', { type: 'boolean', default: false })
     .option('emit', { type: 'boolean', default: true })
     .option('base', { type: 'string', default: '' })
     .option('import', { type: 'string', array: true, default: [] })
