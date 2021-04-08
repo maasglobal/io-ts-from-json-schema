@@ -17,7 +17,7 @@
     "eslint": "eslint --max-warnings=0 '**/*.{ts,js,json}'",
     "lint": "yarn eslint",
     "ci": "yarn typecheck && yarn test && yarn lint && yarn build",
-    "deploy-npm": "yarn ci && yarn publish",
+    "deploy-npm": "yarn ci && yarn publish --non-interactive",
     "deploy-alpha": "yarn deploy-npm --tag alpha"
   },
   "dependencies": {
