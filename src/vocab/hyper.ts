@@ -130,10 +130,20 @@ export function toHeaderSchema(g: any): (link: LDO) => DefInput {
   return (link) => {
     const requestHeadersExport = `_links_${link.rel}_HeaderSchema`;
     const schema: JSONSchema7 = {
-      type: 'object',
-      properties: link.headerSchema,
-      required: Object.keys(link.headerSchema),
-      additionalProperties: true,
+      allOf: [
+        {
+          type: 'object',
+          additionalProperties: {
+            type: 'string',
+          },
+        },
+        {
+          type: 'object',
+          properties: link.headerSchema,
+          required: Object.keys(link.headerSchema),
+          additionalProperties: true,
+        },
+      ],
     };
 
     const title = 'Request Headers';
@@ -198,12 +208,22 @@ export function toTargetHints(g: any): (link: LDO) => DefInput {
 
     const responseHeadersExport = `_links_${link.rel}_TargetHints`;
     const schema: JSONSchema7 = {
-      type: 'object',
-      properties: Object.fromEntries(
-        headers.map(([k, v]) => [k, { type: 'string', const: v }]),
-      ),
-      required: headers.map(([k, _v]) => k),
-      additionalProperties: true,
+      allOf: [
+        {
+          type: 'object',
+          additionalProperties: {
+            type: 'string',
+          },
+        },
+        {
+          type: 'object',
+          properties: Object.fromEntries(
+            headers.map(([k, v]) => [k, { type: 'string', const: v }]),
+          ),
+          required: headers.map(([k, _v]) => k),
+          additionalProperties: true,
+        },
+      ],
       default: Object.fromEntries(headers),
     };
 
