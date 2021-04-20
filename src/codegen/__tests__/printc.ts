@@ -320,7 +320,7 @@ export type FooC = t.ReadonlyC<t.TypeC<{
   });
 
   it('IntegerType', () => {
-    // tslint:disable-next-line: deprecation
+    // eslint-disable-next-line deprecation/deprecation
     const declaration = gen.typeDeclaration('Foo', gen.integerType);
     assert.strictEqual(printC(declaration), `type FooC = t.NumberC`);
   });

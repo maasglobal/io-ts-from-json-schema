@@ -204,7 +204,10 @@ export function toTargetSchema(g: any): (link: LDO) => DefInput {
 
 export function toTargetHints(g: any): (link: LDO) => DefInput {
   return (link) => {
-    const headers = Object.entries(link.targetHints).map(([k, v]) => [k, v.join(', ')]);
+    const headers = Object.entries(link.targetHints).map(([k, v]): [string, string] => [
+      k,
+      v.join(', '),
+    ]);
 
     const responseHeadersExport = `_links_${link.rel}_TargetHints`;
     const schema: JSONSchema7 = {
