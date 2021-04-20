@@ -42,29 +42,29 @@ export function* iotsfjs(
   const genIntersectionCombinator = (
     combinators: Array<gen.TypeReference>,
   ): [gen.TypeReference] | [] => {
-    if (combinators.length === 1) {
-      const [intersection] = combinators;
-      return [intersection];
-    }
     if (combinators.length > 1) {
       const intersection = gen.intersectionCombinator(combinators);
       return [intersection];
     }
-    return [];
+    const [first] = combinators;
+    if (typeof first === 'undefined') {
+      return [];
+    }
+    return [first];
   };
 
   const genUnionCombinator = (
     combinators: Array<gen.TypeReference>,
   ): [gen.TypeReference] | [] => {
-    if (combinators.length === 1) {
-      const [union] = combinators;
-      return [union];
-    }
     if (combinators.length > 1) {
       const union = gen.unionCombinator(combinators);
       return [union];
     }
-    return [];
+    const [first] = combinators;
+    if (typeof first === 'undefined') {
+      return [];
+    }
+    return [first];
   };
 
   // START: Ajv Schema Helpers https://github.com/epoberezkin/ajv-keywords
@@ -93,6 +93,10 @@ export function* iotsfjs(
   ): AjvKeywordsRegexpObject {
     const pattern = regexp.split('/').slice(1, -1).join('/');
     const [flags] = regexp.split('/').slice(-1);
+    if (typeof flags === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     return { pattern, flags };
   }
 
@@ -112,6 +116,10 @@ export function* iotsfjs(
   function capitalize(word: string) {
     const empty = '' as const;
     const [c, ...cs] = word.split(empty);
+    if (typeof c === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     return [c.toUpperCase(), ...cs].join(empty);
   }
 
@@ -139,8 +147,16 @@ export function* iotsfjs(
 
   function getDefaultExport(jsonFilePath: string) {
     const [withoutPath] = jsonFilePath.split('/').slice(-1);
-    const [withouExtension] = withoutPath.split('.json');
-    return typenameFromRandom(withouExtension);
+    if (typeof withoutPath === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
+    const [withoutExtension] = withoutPath.split('.json');
+    if (typeof withoutExtension === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
+    return typenameFromRandom(withoutExtension);
   }
 
   const definedHelper = `
@@ -274,10 +290,18 @@ export type Null = t.TypeOf<typeof Null>
     warning(message);
   }
 
-  function parseRef(ref: string) {
+  type Ref = {
+    filePath: string;
+    variableName: string;
+  };
+  function parseRef(ref: string): Ref {
     const parts = ref.split('#');
     if (parts.length === 1) {
       const [filePath] = parts;
+      if (typeof filePath === 'undefined') {
+        // eslint-disable-next-line fp/no-throw
+        throw new Error('assert false');
+      }
       return { filePath, variableName: getDefaultExport(filePath) };
     }
     if (parts.length > 2) {
@@ -285,6 +309,10 @@ export type Null = t.TypeOf<typeof Null>
       throw new Error('unknown ref format');
     }
     const [filePath, jsonPath] = parts;
+    if (typeof jsonPath === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     const jsonPathParts = jsonPath.split('/');
     if (jsonPathParts.length !== 3) {
       // eslint-disable-next-line fp/no-throw
@@ -299,7 +327,15 @@ export type Null = t.TypeOf<typeof Null>
       // eslint-disable-next-line fp/no-throw
       throw new Error('unknown ref format');
     }
+    if (typeof name === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     const variableName = typenameFromKebab(name);
+    if (typeof filePath === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     return { filePath, variableName };
   }
 
@@ -387,7 +423,10 @@ export type Null = t.TypeOf<typeof Null>
 
   function calculateImportPath(filePath: string) {
     const [withoutSuffix] = filePath.split('.json');
-
+    if (typeof withoutSuffix === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     if (withoutSuffix.startsWith(args.base)) {
       const relativePath = path.relative(documentBase, withoutSuffix);
       if (relativePath.startsWith('.')) {
@@ -406,7 +445,15 @@ export type Null = t.TypeOf<typeof Null>
 
   function importBaseName(filePath: string): string {
     const [withoutPath] = filePath.split('/').reverse();
+    if (typeof withoutPath === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     const [basefile] = withoutPath.split('.json');
+    if (typeof basefile === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     const typeName = typenameFromKebab(basefile);
     return typeName.concat('_');
   }
@@ -416,6 +463,10 @@ export type Null = t.TypeOf<typeof Null>
       return '';
     }
     const [withoutFragment] = refString.split('#');
+    if (typeof withoutFragment === 'undefined') {
+      // eslint-disable-next-line fp/no-throw
+      throw new Error('assert false');
+    }
     const fullDigest = crypto
       .createHash(args.importHashAlgorithm)
       .update(withoutFragment)
@@ -734,6 +785,12 @@ export type Null = t.TypeOf<typeof Null>
       const combinators = schema.allOf.map((s) => fromSchema(s));
       if (combinators.length === 1) {
         const [combinator] = combinators;
+
+        if (typeof combinator === 'undefined') {
+          // eslint-disable-next-line fp/no-throw
+          throw new Error('assert false');
+        }
+
         return [combinator];
       }
       return [gen.intersectionCombinator(combinators)];
@@ -800,6 +857,10 @@ export type Null = t.TypeOf<typeof Null>
     }
     if (combinators.length === 1) {
       const [combinator] = combinators;
+      if (typeof combinator === 'undefined') {
+        // eslint-disable-next-line fp/no-throw
+        throw new Error('assert false');
+      }
       return combinator;
     }
     if (generateChecks('x', schema).length > 1) {
@@ -977,6 +1038,10 @@ export type Null = t.TypeOf<typeof Null>
     return gen.sort(decs).map((dec) => {
       const typeName = dec.name;
       const meta = metas[typeName];
+      if (typeof meta === 'undefined') {
+        // eslint-disable-next-line fp/no-throw
+        throw new Error('assert false');
+      }
       const title = meta.title ?? typeName;
       const description = meta.description ?? 'The purpose of this remains a mystery';
       const examples = meta.examples || [];
