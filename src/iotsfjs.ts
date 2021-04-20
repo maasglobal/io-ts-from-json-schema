@@ -632,7 +632,7 @@ export type Null = t.TypeOf<typeof Null>
 
   function fromRequired(schema: JSONSchema7): [gen.TypeReference] | [] {
     if ('required' in schema && typeof schema.required !== 'undefined') {
-      const combinator = gen.interfaceCombinator(
+      const combinator = gen.typeCombinator(
         schema.required.map((key) => {
           helpers.add(definedHelper);
           return gen.property(key, Defined);
