@@ -43,7 +43,7 @@
     "eslint-plugin-json": "^2.1.0",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-simple-import-sort": "^5.0.3",
-    "fp-ts": "^2.9.0",
+    "fp-ts": "^2.10.0",
     "jest": "^26.4.2",
     "maas-schemas-git-develop": "git://github.com/cyberixae/maas-schemas.git#add_explicit_type_to_arrays_and_objects",
     "monocle-ts": "^2.1.0",
