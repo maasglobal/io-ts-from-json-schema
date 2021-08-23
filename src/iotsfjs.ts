@@ -871,11 +871,23 @@ export type Null = t.TypeOf<typeof Null>
     throw new Error(`unknown schema: ${JSON.stringify(schema)}`);
   }
 
-  function extractExamples(schema: JSONSchema7Definition): Examples {
-    if (typeof schema === 'boolean') {
-      // note that in this context true is any and false is never
-      return [];
+  function extractTitleValue(schema: JSONSchema7): JSONSchema7['title'] {
+    if ('$ref' in schema) {
+      warning('skipping title value handling for $ref object');
+      return undefined;
     }
+    return schema['title'];
+  }
+
+  function extractDescriptionValue(schema: JSONSchema7): JSONSchema7['description'] {
+    if ('$ref' in schema) {
+      warning('skipping description value handling for $ref object');
+      return undefined;
+    }
+    return schema['description'];
+  }
+
+  function extractExamples(schema: JSONSchema7): Examples {
     if ('$ref' in schema) {
       warning('skipping examples handling for $ref object');
       return [];
@@ -891,16 +903,61 @@ export type Null = t.TypeOf<typeof Null>
     throw new Error('Unexpected format of examples');
   }
 
-  function extractDefaultValue(schema: JSONSchema7Definition): JSONSchema7['default'] {
-    if (typeof schema === 'boolean') {
-      // note that in this context true is any and false is never
-      return undefined;
-    }
+  function extractDefaultValue(schema: JSONSchema7): JSONSchema7['default'] {
     if ('$ref' in schema) {
       warning('skipping default value handling for $ref object');
       return undefined;
     }
     return schema['default'];
+  }
+
+  function extractMinimumValue(schema: JSONSchema7): JSONSchema7['minimum'] {
+    if ('$ref' in schema) {
+      warning('skipping minimum value handling for $ref object');
+      return undefined;
+    }
+    return schema['minimum'];
+  }
+
+  function extractMaximumValue(schema: JSONSchema7): JSONSchema7['maximum'] {
+    if ('$ref' in schema) {
+      warning('skipping maximum value handling for $ref object');
+      return undefined;
+    }
+    return schema['maximum'];
+  }
+
+  function extractMeta(scem: JSONSchema7Definition): DefMeta {
+    if (typeof scem === 'boolean') {
+      // note that in this context true is any and false is never
+      return {
+        title: undefined,
+        description: undefined,
+        examples: [],
+        defaultValue: undefined,
+        minimumValue: undefined,
+        maximumValue: undefined,
+      };
+    }
+    if (isRefObject(scem)) {
+      // ref's do not have meta data
+      return {
+        title: undefined,
+        description: undefined,
+        examples: [],
+        defaultValue: undefined,
+        minimumValue: undefined,
+        maximumValue: undefined,
+      };
+    }
+    return {
+      title: extractTitleValue(scem),
+      description: extractDescriptionValue(scem),
+      examples: extractExamples(scem),
+      defaultValue: extractDefaultValue(scem),
+      minimumValue: extractMinimumValue(scem),
+      maximumValue: extractMaximumValue(scem),
+    };
   }
 
   function fromDefinitions(definitions2: JSONSchema7['definitions']): Array<DefInput> {
@@ -913,12 +970,7 @@ export type Null = t.TypeOf<typeof Null>
         if (typeof scem === 'boolean') {
           return [
             {
-              meta: {
-                title: undefined,
-                description: undefined,
-                examples: [],
-                defaultValue: undefined,
-              },
+              meta: extractMeta(scem),
               dec: gen.typeDeclaration(
                 name,
                 gen.brandCombinator(
@@ -935,12 +987,7 @@ export type Null = t.TypeOf<typeof Null>
           // ref's do not have meta data
           return [
             {
-              meta: {
-                title: undefined,
-                description: undefined,
-                examples: [],
-                defaultValue: undefined,
-              },
+              meta: extractMeta(scem),
               dec: gen.typeDeclaration(
                 name,
                 gen.brandCombinator(fromRef(scem), (_x) => String(true), name),
@@ -951,12 +998,7 @@ export type Null = t.TypeOf<typeof Null>
         }
         return [
           {
-            meta: {
-              title: scem.title,
-              description: scem.description,
-              examples: extractExamples(scem),
-              defaultValue: extractDefaultValue(scem),
-            },
+            meta: extractMeta(scem),
             dec: gen.typeDeclaration(
               name,
               gen.brandCombinator(
@@ -977,22 +1019,16 @@ export type Null = t.TypeOf<typeof Null>
       warning(`missing $schema declaration`);
     }
 
-    // root schema info is printed in the beginning of the file
-    const title = defaultExport;
-    const description = 'The default export. More information at the top.';
-    const examples = extractExamples(root);
-    const defaultValue = extractDefaultValue(root);
-
     imps.add("import * as t from 'io-ts';");
     exps.add(`export default ${defaultExport};`);
 
     return [
       {
         meta: {
-          title,
-          description,
-          examples,
-          defaultValue,
+          ...extractMeta(root),
+          // root schema info is printed in the beginning of the file
+          title: defaultExport,
+          description: 'The default export. More information at the top.',
         },
         dec: gen.typeDeclaration(
           defaultExport,
@@ -1018,8 +1054,7 @@ export type Null = t.TypeOf<typeof Null>
     const rootDef = fromRoot(schema);
     const hyperDef = fromHyper({
       defaultExport,
-      extractExamples,
-      extractDefaultValue,
+      extractMeta,
       imps,
       exps,
       fromSchema,
@@ -1046,6 +1081,8 @@ export type Null = t.TypeOf<typeof Null>
       const description = meta.description ?? 'The purpose of this remains a mystery';
       const examples = meta.examples || [];
       const defaultValue = meta.defaultValue;
+      const minimumValue = meta.minimumValue;
+      const maximumValue = meta.maximumValue;
       const staticType = gen.printStatic(dec);
       const runtimeType = printC(dec)
         .concat('\n')
@@ -1066,6 +1103,8 @@ export type Null = t.TypeOf<typeof Null>
         description,
         examples,
         defaultValue,
+        minimumValue,
+        maximumValue,
         staticType,
         runtimeType,
       };
@@ -1108,6 +1147,8 @@ export type Null = t.TypeOf<typeof Null>
       description,
       examples,
       defaultValue,
+      minimumValue,
+      maximumValue,
       staticType,
       runtimeType,
     } = def;
@@ -1127,6 +1168,20 @@ export type Null = t.TypeOf<typeof Null>
       yield `/** require('io-ts-validator').validator(${typeName}).decodeSync(${defaultName}) // => ${defaultName} */`;
       yield `export const ${defaultName}: ${typeName} = ${JSON.stringify(
         defaultValue,
+      )} as unknown as ${typeName};`;
+    }
+    if (typeof minimumValue !== 'undefined') {
+      const minimumName = 'minimum'.concat(typeName);
+      yield `/** require('io-ts-validator').validator(${typeName}).decodeSync(${minimumName}) // => ${minimumName} */`;
+      yield `export const ${minimumName}: ${typeName} = ${JSON.stringify(
+        minimumValue,
+      )} as unknown as ${typeName};`;
+    }
+    if (typeof maximumValue !== 'undefined') {
+      const maximumName = 'maximum'.concat(typeName);
+      yield `/** require('io-ts-validator').validator(${typeName}).decodeSync(${maximumName}) // => ${maximumName} */`;
+      yield `export const ${maximumName}: ${typeName} = ${JSON.stringify(
+        maximumValue,
       )} as unknown as ${typeName};`;
     }
     yield '';

@@ -7,6 +7,8 @@ export type Def = {
   description: string;
   examples: Array<unknown>;
   defaultValue: unknown;
+  minimumValue: unknown;
+  maximumValue: unknown;
   staticType: string;
   runtimeType: string;
 };
@@ -18,6 +20,8 @@ export type DefMeta = {
   description: JSONSchema7['description'];
   examples: Examples;
   defaultValue: JSONSchema7['default'];
+  minimumValue: JSONSchema7['minimum'];
+  maximumValue: JSONSchema7['maximum'];
 };
 
 export type DefInput = {
