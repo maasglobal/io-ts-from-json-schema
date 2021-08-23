@@ -35,23 +35,15 @@ export function toHref(g: any): (link: LDO) => DefInput {
 
     const hrefTemplateExport = `_links_${link.rel}_Href`;
     const schema: JSONSchema7 = {
+      title: 'Href Template',
+      description: 'Href body format as described by hyper schema href.',
       type: 'string',
       const: link.href,
       default: link.href,
     };
 
-    const title = 'Href Template';
-    const description = 'Href body format as described by hyper schema href.';
-    const examples = g.extractExamples(schema);
-    const defaultValue = g.extractDefaultValue(schema);
-
     return {
-      meta: {
-        title,
-        description,
-        examples,
-        defaultValue,
-      },
+      meta: g.extractMeta(schema),
       dec: gen.typeDeclaration(
         hrefTemplateExport,
         gen.brandCombinator(
@@ -70,17 +62,11 @@ export function toHrefSchema(g: any): (link: LDO) => DefInput {
     const hrefVariablesExport = `_links_${link.rel}_HrefSchema`;
     const schema: JSONSchema7 = link.hrefSchema;
 
-    const title = 'Href Variables';
-    const description = 'Href variable format as described by hyper schema hrefSchema.';
-    const examples = g.extractExamples(schema);
-    const defaultValue = g.extractDefaultValue(schema);
-
     return {
       meta: {
-        title,
-        description,
-        examples,
-        defaultValue,
+        ...g.extractMeta(schema),
+        title: 'Href Variables',
+        description: 'Href variable format as described by hyper schema hrefSchema.',
       },
       dec: gen.typeDeclaration(
         hrefVariablesExport,
@@ -100,18 +86,11 @@ export function toSubmissionSchema(g: any): (link: LDO) => DefInput {
     const requestBodyExport = `_links_${link.rel}_SubmissionSchema`;
     const schema: JSONSchema7 = link.submissionSchema;
 
-    const title = 'Request Body';
-    const description =
-      'Request body format as described by hyper schema submissionSchema.';
-    const examples = g.extractExamples(schema);
-    const defaultValue = g.extractDefaultValue(schema);
-
     return {
       meta: {
-        title,
-        description,
-        examples,
-        defaultValue,
+        ...g.extractMeta(schema),
+        title: 'Request Body',
+        description: 'Request body format as described by hyper schema submissionSchema.',
       },
       dec: gen.typeDeclaration(
         requestBodyExport,
@@ -130,6 +109,9 @@ export function toHeaderSchema(g: any): (link: LDO) => DefInput {
   return (link) => {
     const requestHeadersExport = `_links_${link.rel}_HeaderSchema`;
     const schema: JSONSchema7 = {
+      title: 'Request Headers',
+      description: 'Request headers format as described by hyper schema headerSchema.',
+
       allOf: [
         {
           type: 'object',
@@ -146,19 +128,8 @@ export function toHeaderSchema(g: any): (link: LDO) => DefInput {
       ],
     };
 
-    const title = 'Request Headers';
-    const description =
-      'Request headers format as described by hyper schema headerSchema.';
-    const examples = g.extractExamples(schema);
-    const defaultValue = g.extractDefaultValue(schema);
-
     return {
-      meta: {
-        title,
-        description,
-        examples,
-        defaultValue,
-      },
+      meta: g.extractMeta(schema),
       dec: gen.typeDeclaration(
         requestHeadersExport,
         gen.brandCombinator(
@@ -177,17 +148,11 @@ export function toTargetSchema(g: any): (link: LDO) => DefInput {
     const responseBodyExport = `_links_${link.rel}_TargetSchema`;
     const schema: JSONSchema7 = link.targetSchema;
 
-    const title = 'Response Body';
-    const description = 'Response body format as described by hyper schema targetschema.';
-    const examples = g.extractExamples(schema);
-    const defaultValue = g.extractDefaultValue(schema);
-
     return {
       meta: {
-        title,
-        description,
-        examples,
-        defaultValue,
+        ...g.extractMeta(schema),
+        title: 'Response Body',
+        description: 'Response body format as described by hyper schema targetschema.',
       },
       dec: gen.typeDeclaration(
         responseBodyExport,
@@ -211,6 +176,8 @@ export function toTargetHints(g: any): (link: LDO) => DefInput {
 
     const responseHeadersExport = `_links_${link.rel}_TargetHints`;
     const schema: JSONSchema7 = {
+      title: 'Response Headers',
+      description: 'Response headers format as described by hyper schema targetHints.',
       allOf: [
         {
           type: 'object',
@@ -230,19 +197,8 @@ export function toTargetHints(g: any): (link: LDO) => DefInput {
       default: Object.fromEntries(headers),
     };
 
-    const title = 'Response Headers';
-    const description =
-      'Response headers format as described by hyper schema targetHints.';
-    const examples = g.extractExamples(schema);
-    const defaultValue = g.extractDefaultValue(schema);
-
     return {
-      meta: {
-        title,
-        description,
-        examples,
-        defaultValue,
-      },
+      meta: g.extractMeta(schema),
       dec: gen.typeDeclaration(
         responseHeadersExport,
         gen.brandCombinator(
