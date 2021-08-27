@@ -588,10 +588,9 @@ export type Null = t.TypeOf<typeof Null>
         );
       }
       const combinator = gen.partialCombinator(
-        Object.entries(
-          schema.properties,
-        ).map(<K extends string, V>([key, value]: [K, V]) =>
-          gen.property(key, fromSchema(value)),
+        Object.entries(schema.properties).map(
+          <K extends string, V>([key, value]: [K, V]) =>
+            gen.property(key, fromSchema(value)),
         ),
       );
       return [combinator];
@@ -632,9 +631,9 @@ export type Null = t.TypeOf<typeof Null>
       type Pattern = string;
 
       // The Record must also support non-pattern properties
-      const exactPairs = Object.entries(
-        schema.properties ?? {},
-      ).map(<V>([key, value]: [string, V]): [Pattern, V] => [`^${key}$`, value]);
+      const exactPairs = Object.entries(schema.properties ?? {}).map(
+        <V>([key, value]: [string, V]): [Pattern, V] => [`^${key}$`, value],
+      );
       const fuzzyPairs = Object.entries(schema.patternProperties);
       const allPairs = exactPairs.concat(fuzzyPairs);
       const valueCombinators = allPairs.map(

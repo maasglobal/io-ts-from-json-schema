@@ -2,23 +2,26 @@
   "name": "io-ts-from-json-schema",
   "version": "0.0.19",
   "description": "Iotsfjs is a static code generation utility used for converting json schema files into static TypeScript types and io-ts runtime validators.",
+  "license": "MIT",
+  "keywords": [
+    "typescript",
+    "io-ts",
+    "code-generation"
+  ],
+  "bugs": {
+    "url": "https://github.com/maasglobal/io-ts-from-json-schema/issues"
+  },
+  "homepage": "https://github.com/maasglobal/io-ts-from-json-schema/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maasglobal/io-ts-from-json-schema.git"
+  },
   "main": "lib/cli.js",
   "files": [
     "lib/**/*"
   ],
   "bin": {
     "iotsfjs": "lib/cli.js"
-  },
-  "scripts": {
-    "test": "jest --no-cache",
-    "clean": "rm -rf lib tmp",
-    "typecheck": "tsc -p src/tsconfig.json",
-    "build": "yarn clean && tsc && chmod u+x ./lib/cli.js",
-    "eslint": "eslint --max-warnings=0 '**/*.{ts,js,json}'",
-    "lint": "yarn eslint",
-    "ci": "yarn typecheck && yarn test && yarn lint && yarn build",
-    "deploy-npm": "yarn ci && yarn publish --non-interactive",
-    "deploy-alpha": "yarn deploy-npm --tag alpha"
   },
   "dependencies": {
     "glob": "^7.1.6",
@@ -28,6 +31,7 @@
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",
+    "@types/jest": "^27.0.1",
     "@types/json-schema": "^7.0.7",
     "@types/node": "^14.0.1",
     "@types/yargs": "^15.0.5",
@@ -43,26 +47,24 @@
     "eslint-plugin-json": "^2.1.0",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-simple-import-sort": "^5.0.3",
-    "fp-ts": "^2.10.0",
+    "fp-ts": "^2.11.1",
     "jest": "^26.4.2",
     "maas-schemas-git-develop": "git://github.com/cyberixae/maas-schemas.git#add_explicit_type_to_arrays_and_objects",
     "monocle-ts": "^2.1.0",
     "prettier": "^2.1.2",
     "ts-jest": "^26.3.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.4.2"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/maasglobal/io-ts-from-json-schema.git"
-  },
-  "keywords": [
-    "typescript",
-    "io-ts",
-    "code-generation"
-  ],
-  "bugs": {
-    "url": "https://github.com/maasglobal/io-ts-from-json-schema/issues"
-  },
-  "homepage": "https://github.com/maasglobal/io-ts-from-json-schema/",
-  "license": "MIT"
+  "scripts": {
+    "test": "jest --no-cache",
+    "clean": "rm -rf lib tmp",
+    "typecheck": "tsc -p src/tsconfig.json",
+    "build": "yarn clean && tsc && chmod u+x ./lib/cli.js",
+    "eslint": "eslint --max-warnings=0 '**/*.{ts,js,json}'",
+    "prettify": "yarn eslint --fix || true",
+    "lint": "yarn eslint",
+    "ci": "yarn typecheck && yarn test && yarn lint && yarn build",
+    "deploy-npm": "yarn ci && yarn publish --non-interactive",
+    "deploy-alpha": "yarn deploy-npm --tag alpha"
+  }
 }
