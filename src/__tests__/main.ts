@@ -34,7 +34,7 @@ describe('main', () => {
     main({
       stderr,
       stdout,
-      args: `--inputFile './node_modules/maas-schemas-git-develop/maas-schemas/schemas/**/*.json' --outputDir ${tsDir} --base http://maasglobal.com/`.split(
+      args: `--inputFile './node_modules/maas-schemas-git-develop/maas-schemas/schemas/**/*.json' --outputDir ${tsDir} https://schemas.maas.global/ --maskNull`.split(
         ' ',
       ),
     });

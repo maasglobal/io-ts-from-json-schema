@@ -3186,9 +3186,9 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
-"maas-schemas-git-develop@git://github.com/cyberixae/maas-schemas.git#add_explicit_type_to_arrays_and_objects":
+"maas-schemas-git-develop@https://github.com/maasglobal/maas-schemas.git#develop":
   version "0.0.0"
-  resolved "git://github.com/cyberixae/maas-schemas.git#fc1e3f05bf67f0ff8e76fec44449bfa6f1e7398c"
+  resolved "https://github.com/maasglobal/maas-schemas.git#63e4b54ff579ff30a7a1484f6aac05ce8cb36ef2"
 
 make-dir@^3.0.0:
   version "3.1.0"
