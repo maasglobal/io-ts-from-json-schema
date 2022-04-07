@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as stream from 'stream';
 
 import { printC } from './codegen/printc';
-import { Def, DefInput, DefMeta, Examples } from './types/def';
+import { Def, DefInput, DefMeta, Examples, Invalid } from './types/def';
 import { fromHyper } from './vocab/hyper';
 
 export type Args = {
@@ -229,6 +229,7 @@ export type Null = t.TypeOf<typeof Null>
     'uniqueItems',
     'default',
     'examples',
+    'invalid',
     'links',
   ];
   const supportedOutsideRoot = ['$ref'];
@@ -902,6 +903,22 @@ export type Null = t.TypeOf<typeof Null>
     throw new Error('Unexpected format of examples');
   }
 
+  function extractInvalid(schema: JSONSchema7): Invalid {
+    if ('$ref' in schema) {
+      warning('skipping invalid examples handling for $ref object');
+      return {};
+    }
+    const { invalid } = schema as any;
+    if (typeof invalid === 'object') {
+      return invalid;
+    }
+    if (typeof invalid === 'undefined') {
+      return {};
+    }
+    // eslint-disable-next-line fp/no-throw
+    throw new Error('Unexpected format of invalid examples');
+  }
+
   function extractDefaultValue(schema: JSONSchema7): JSONSchema7['default'] {
     if ('$ref' in schema) {
       warning('skipping default value handling for $ref object');
@@ -933,6 +950,7 @@ export type Null = t.TypeOf<typeof Null>
         title: undefined,
         description: undefined,
         examples: [],
+        invalid: {},
         defaultValue: undefined,
         minimumValue: undefined,
         maximumValue: undefined,
@@ -944,6 +962,7 @@ export type Null = t.TypeOf<typeof Null>
         title: undefined,
         description: undefined,
         examples: [],
+        invalid: {},
         defaultValue: undefined,
         minimumValue: undefined,
         maximumValue: undefined,
@@ -953,6 +972,7 @@ export type Null = t.TypeOf<typeof Null>
       title: extractTitleValue(scem),
       description: extractDescriptionValue(scem),
       examples: extractExamples(scem),
+      invalid: extractInvalid(scem),
       defaultValue: extractDefaultValue(scem),
       minimumValue: extractMinimumValue(scem),
       maximumValue: extractMaximumValue(scem),
@@ -1079,6 +1099,7 @@ export type Null = t.TypeOf<typeof Null>
       const title = meta.title ?? typeName;
       const description = meta.description ?? 'The purpose of this remains a mystery';
       const examples = meta.examples || [];
+      const invalid = meta.invalid || {};
       const defaultValue = meta.defaultValue;
       const minimumValue = meta.minimumValue;
       const maximumValue = meta.maximumValue;
@@ -1101,6 +1122,7 @@ export type Null = t.TypeOf<typeof Null>
         title,
         description,
         examples,
+        invalid,
         defaultValue,
         minimumValue,
         maximumValue,
@@ -1145,6 +1167,7 @@ export type Null = t.TypeOf<typeof Null>
       title,
       description,
       examples,
+      invalid,
       defaultValue,
       minimumValue,
       maximumValue,
@@ -1161,6 +1184,12 @@ export type Null = t.TypeOf<typeof Null>
       yield `export const ${examplesName}: NonEmptyArray<${typeName}> = ${JSON.stringify(
         examples,
       )} as unknown as NonEmptyArray<${typeName}>;`;
+    }
+    // eslint-disable-next-line fp/no-loops
+    for (const [b64, description] of Object.entries(invalid)) {
+      yield `// NEGATIVE Test Case: ${description}`;
+      const negativeTestCase = Buffer.from(b64, 'base64').toString('ascii');
+      yield `/** require('io-ts-validator').validator(${typeName}).decodeEither(${negativeTestCase})._tag // => 'Left' */`;
     }
     if (typeof defaultValue !== 'undefined') {
       const defaultName = 'default'.concat(typeName);
