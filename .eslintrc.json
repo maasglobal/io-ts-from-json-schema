@@ -1,5 +1,3 @@
 {
-  "extends": [
-    "eslint-config-maasglobal-ts"
-  ]
+  "extends": ["eslint-config-maasglobal-ts/strict"]
 }
