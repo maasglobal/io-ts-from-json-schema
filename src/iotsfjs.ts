@@ -669,6 +669,10 @@ export type Null = t.TypeOf<typeof Null>
         gen.recordCombinator(gen.stringType, fromSchema(schema.additionalProperties)),
       ];
     }
+
+    if (schema.type === 'object') {
+      return [gen.recordCombinator(gen.stringType, gen.unknownType)];
+    }
     return [];
   }
 
