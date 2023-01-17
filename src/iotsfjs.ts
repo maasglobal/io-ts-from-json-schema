@@ -353,7 +353,7 @@ export type Null = t.TypeOf<typeof Null>
 
   function checkPattern(jx: JSVar, pattern: string): JSBoolean {
     const stringLiteral = JSON.stringify(pattern);
-    return `( typeof ${jx} !== 'string' || ${jx}.match(RegExp(${stringLiteral})) !== null )`;
+    return `( typeof ${jx} !== 'string' || ${jx}.match(RegExp(${stringLiteral}, 'u')) !== null )`;
   }
 
   function checkRegexp(jx: JSVar, regexp: AjvKeywordsRegexp): JSBoolean {
