@@ -1,6 +1,6 @@
 {
   "name": "io-ts-from-json-schema",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Iotsfjs is a static code generation utility used for converting json schema files into static TypeScript types and io-ts runtime validators.",
   "license": "MIT",
   "keywords": [
