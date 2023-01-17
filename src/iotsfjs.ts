@@ -1192,7 +1192,7 @@ export type Null = t.TypeOf<typeof Null>
     // eslint-disable-next-line fp/no-loops
     for (const [b64, description] of Object.entries(invalid)) {
       yield `// NEGATIVE Test Case: ${description}`;
-      const negativeTestCase = Buffer.from(b64, 'base64').toString('ascii');
+      const negativeTestCase = Buffer.from(b64, 'base64').toString('utf8');
       yield `/** require('io-ts-validator').validator(${typeName}).decodeEither(${negativeTestCase})._tag // => 'Left' */`;
     }
     if (typeof defaultValue !== 'undefined') {
