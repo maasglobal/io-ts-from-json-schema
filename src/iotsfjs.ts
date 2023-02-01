@@ -67,52 +67,6 @@ export function* iotsfjs(
     return [first];
   };
 
-  // START: Ajv Schema Helpers https://github.com/epoberezkin/ajv-keywords
-
-  type AjvKeywordsRegexpString = string;
-  type AjvKeywordsRegexpObject = {
-    pattern: string;
-    flags: string;
-  };
-  type AjvKeywordsRegexp = AjvKeywordsRegexpString | AjvKeywordsRegexpObject;
-
-  type AjvKeywords = { regexp: AjvKeywordsRegexp };
-
-  type AjvSchema = JSONSchema7 & AjvKeywords;
-
-  function isRegexpString(regexp: AjvKeywordsRegexp): regexp is AjvKeywordsRegexpString {
-    return typeof regexp === 'string';
-  }
-
-  function isRegexpObject(regexp: AjvKeywordsRegexp): regexp is AjvKeywordsRegexpObject {
-    return typeof regexp === 'object';
-  }
-
-  function regexpObjectFromString(
-    regexp: AjvKeywordsRegexpString,
-  ): AjvKeywordsRegexpObject {
-    const pattern = regexp.split('/').slice(1, -1).join('/');
-    const [flags] = regexp.split('/').slice(-1);
-    if (typeof flags === 'undefined') {
-      // eslint-disable-next-line fp/no-throw
-      throw new Error('assert false');
-    }
-    return { pattern, flags };
-  }
-
-  function getRegexpObject(regexp: AjvKeywordsRegexp): AjvKeywordsRegexpObject {
-    if (isRegexpString(regexp)) {
-      return regexpObjectFromString(regexp);
-    }
-    if (isRegexpObject(regexp)) {
-      return regexp;
-    }
-    // eslint-disable-next-line fp/no-throw
-    throw new Error('unknown regexp format');
-  }
-
-  // END: Ajv Schema Helpers
-
   function capitalize(word: string) {
     const empty = '' as const;
     const [c, ...cs] = word.split(empty);
@@ -222,7 +176,6 @@ export type Null = t.TypeOf<typeof Null>
     'minLength',
     'maxLength',
     'pattern',
-    'regexp',
     'format',
     'minItems',
     'maxItems',
@@ -356,13 +309,6 @@ export type Null = t.TypeOf<typeof Null>
     return `( typeof ${jx} !== 'string' || ${jx}.match(RegExp(${stringLiteral}, 'u')) !== null )`;
   }
 
-  function checkRegexp(jx: JSVar, regexp: AjvKeywordsRegexp): JSBoolean {
-    const { pattern, flags } = getRegexpObject(regexp);
-    const patternLiteral = JSON.stringify(pattern);
-    const flagsLiteral = JSON.stringify(flags);
-    return `( typeof ${jx} !== 'string' || ${jx}.match(RegExp(${patternLiteral}, ${flagsLiteral})) !== null )`;
-  }
-
   function checkMinLength(jx: JSVar, minLength: number): JSBoolean {
     return `( typeof ${jx} !== 'string' || ${jx}.length >= ${minLength} )`;
   }
@@ -402,9 +348,6 @@ export type Null = t.TypeOf<typeof Null>
   function generateChecks(jx: JSVar, schema: JSONSchema7): JSBoolean {
     const checks: Array<string> = [
       ...(schema.pattern ? [checkPattern(jx, schema.pattern)] : []),
-      ...((schema as AjvSchema).regexp
-        ? [checkRegexp(jx, (schema as AjvSchema).regexp)]
-        : []),
       ...(schema.format ? [checkFormat(jx, schema.format)] : []),
       ...(schema.minLength ? [checkMinLength(jx, schema.minLength)] : []),
       ...(schema.maxLength ? [checkMaxLength(jx, schema.maxLength)] : []),
