@@ -1122,7 +1122,7 @@ export type Null = t.TypeOf<typeof Null>
       runtimeType,
     } = def;
     yield `// ${title}`;
-    yield `// ${description}`;
+    yield `/* ${description} */`;
     yield staticType;
     yield runtimeType;
     if (examples.length > 0) {
