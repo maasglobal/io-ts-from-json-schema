@@ -1121,8 +1121,8 @@ export type Null = t.TypeOf<typeof Null>
       staticType,
       runtimeType,
     } = def;
-    yield `// ${title}`;
-    yield `// ${description}`;
+    yield* title.split('\n').map((line) => `// ${line}`);
+    yield* description.split('\n').map((line) => `// ${line}`);
     yield staticType;
     yield runtimeType;
     if (examples.length > 0) {
