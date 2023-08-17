@@ -161,7 +161,6 @@ export type Null = t.TypeOf<typeof Null>
     'additionalProperties',
     'allOf',
     'anyOf',
-    'oneOf',
     'enum',
     'const',
     'items',
@@ -753,14 +752,6 @@ export type Null = t.TypeOf<typeof Null>
     return [];
   }
 
-  function fromOneOf(schema: JSONSchema7): [gen.TypeReference] | [] {
-    if ('oneOf' in schema && typeof schema.oneOf !== 'undefined') {
-      const combinators = schema.oneOf.map((s) => fromSchema(s));
-      return genUnionCombinator(combinators);
-    }
-    return [];
-  }
-
   function fromSchema(schema: JSONSchema7Definition, isRoot = false): gen.TypeReference {
     if (typeof schema === 'boolean') {
       imps.add("import * as t from 'io-ts';");
@@ -797,7 +788,6 @@ export type Null = t.TypeOf<typeof Null>
       ...fromConst(schema),
       ...fromAllOf(schema),
       ...fromAnyOf(schema),
-      ...fromOneOf(schema),
     ];
     if (combinators.length > 1) {
       return gen.intersectionCombinator(combinators);
