@@ -3173,9 +3173,10 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
-"maas-schemas-git-develop@https://github.com/maasglobal/maas-schemas.git#develop":
-  version "0.0.0"
-  resolved "https://github.com/maasglobal/maas-schemas.git#63e4b54ff579ff30a7a1484f6aac05ce8cb36ef2"
+maasglobal-reference-schemas@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/maasglobal-reference-schemas/-/maasglobal-reference-schemas-0.0.2.tgz#12fe6868e0be3b6134e6223c61c31d8ec8310b9f"
+  integrity sha512-eXdp7kXLBuYIHmbZUJDGDpbrTL79VWUWsTgdhogVA25ep2IMsuMsD/SCHsIbHqlI0dY1KVKslyuPN8rgqloMvQ==
 
 make-dir@^3.0.0:
   version "3.1.0"

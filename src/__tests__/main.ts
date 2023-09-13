@@ -8,7 +8,7 @@ import * as ts from 'typescript';
 import { main } from '../main';
 
 describe('main', () => {
-  it('should convert maas-schemas', () => {
+  it('should convert MaaS Global reference schemas', () => {
     const tmpRoot = 'tmp';
     fs.mkdirSync(tmpRoot, { recursive: true });
     const tmpDir = fs.mkdtempSync(path.join(tmpRoot, 'test-run-'));
@@ -34,7 +34,7 @@ describe('main', () => {
     main({
       stderr,
       stdout,
-      args: `--inputFile './node_modules/maas-schemas-git-develop/maas-schemas/schemas/**/*.json' --outputDir ${tsDir} https://schemas.maas.global/ --maskNull`.split(
+      args: `--inputFile './node_modules/maasglobal-reference-schemas/schemas/**/*.json' --outputDir ${tsDir} https://reference-schemas.maas.global/ --maskNull`.split(
         ' ',
       ),
     });
